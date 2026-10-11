@@ -838,11 +838,13 @@ async function fbRegisterUser(userData) {
   // 4. Set current session immediately
   const sessionUser = { 
     id: cleanUserData.id || ('u_' + cleanUserData.phone),
+    userId: cleanUserData.id || ('u_' + cleanUserData.phone),
     name: cleanUserData.name, 
     email: cleanUserData.email || '', 
     phone: cleanUserData.phone, 
     city: cleanUserData.city || '', 
     address: cleanUserData.address || '',
+    avatar: cleanUserData.avatar || '',
     role: cleanUserData.role
   };
   localStorage.setItem('radha_auth_user_v1', JSON.stringify(sessionUser));
@@ -871,11 +873,13 @@ async function fbLoginUser(emailOrPhone, password) {
               const role = (u.role || 'user').toLowerCase();
               const sessionUser = { 
                 id: doc.id,
+                userId: doc.id,
                 name: u.name, 
                 email: u.email || '', 
                 phone: u.phone || '', 
                 city: u.city || '', 
                 address: u.address || '',
+                avatar: u.avatar || '',
                 role: role
               };
               localStorage.setItem('radha_auth_user_v1', JSON.stringify(sessionUser));
@@ -916,12 +920,14 @@ async function fbLoginUser(emailOrPhone, password) {
         if (isMatch) {
           const role = (u.role || 'user').toLowerCase();
           const sessionUser = { 
-            id: u.id || ('p_' + cleanPhone),
+            id: u.id || ('u_' + cleanPhone),
+            userId: u.id || ('u_' + cleanPhone),
             name: u.name, 
             email: u.email || '', 
             phone: u.phone || '', 
             city: u.city || '', 
             address: u.address || '',
+            avatar: u.avatar || '',
             role: role
           };
           localStorage.setItem('radha_auth_user_v1', JSON.stringify(sessionUser));
@@ -945,83 +951,113 @@ async function fbLoginUser(emailOrPhone, password) {
 
 let _fbActiveProfileUnsub = null;
 
-async function fbUpdateUserProfile(emailOrPhone, updatedData) {
+async function fbUpdateUserProfile(emailOrPhone, updatedData, userObj) {
   const cleanData = _sanitizeForFirestore(updatedData || {});
   const now = Date.now();
   cleanData.updatedAt = now;
 
-  // 1. Update local session
+  // 1. Determine User ID from session or userObj
+  let session = {};
   try {
-    const session = JSON.parse(localStorage.getItem('radha_auth_user_v1') || '{}');
-    const newSession = { ...session, ...cleanData };
-    localStorage.setItem('radha_auth_user_v1', JSON.stringify(newSession));
-    if (newSession.role === 'admin' || newSession.role === 'superadmin') {
-      localStorage.setItem('radha_auth_admin_v1', JSON.stringify(newSession));
-    }
+    session = JSON.parse(localStorage.getItem('radha_auth_user_v1') || '{}');
+  } catch (e) {}
 
-    // Update in local registered users array
+  const targetUserId = String(
+    (userObj && (userObj.id || userObj.userId || userObj.uid)) ||
+    (session && (session.id || session.userId || session.uid)) ||
+    (updatedData && (updatedData.id || updatedData.userId || updatedData.uid)) ||
+    ''
+  ).trim();
+
+  if (targetUserId) {
+    cleanData.id = targetUserId;
+    cleanData.userId = targetUserId;
+  }
+
+  // 2. Update local session immediately
+  const newSession = { ...session, ...cleanData };
+  localStorage.setItem('radha_auth_user_v1', JSON.stringify(newSession));
+  if (newSession.role === 'admin' || newSession.role === 'superadmin') {
+    localStorage.setItem('radha_auth_admin_v1', JSON.stringify(newSession));
+  }
+
+  // 3. Update local registered users array
+  try {
     const users = JSON.parse(localStorage.getItem('radha_registered_users_v1') || '[]');
-    const cleanContact = String(emailOrPhone || '').trim();
+    const cleanContact = String(emailOrPhone || session.phone || session.email || '').trim();
     const cleanPhone = cleanContact.replace(/[\s\-\+]/g, '').slice(-10);
     const idx = users.findIndex(u => 
-      (session.id && u.id === session.id) || 
+      (targetUserId && (u.id === targetUserId || u.userId === targetUserId)) || 
       (u.email && cleanContact && u.email.toLowerCase() === cleanContact.toLowerCase()) || 
       (u.phone && cleanPhone && String(u.phone).replace(/[\s\-\+]/g, '').slice(-10) === cleanPhone)
     );
     if (idx !== -1) {
       users[idx] = { ...users[idx], ...cleanData };
       localStorage.setItem('radha_registered_users_v1', JSON.stringify(users));
+    } else {
+      users.push({ ...cleanData, id: targetUserId || ('u_' + Date.now()), userId: targetUserId || ('u_' + Date.now()) });
+      localStorage.setItem('radha_registered_users_v1', JSON.stringify(users));
     }
   } catch (e) {}
 
-  // 2. Cloud update in Firestore (Awaited with set merge: true)
+  // 4. Cloud update in Firestore directly under the user's ID
   try {
     const db = await initFirebaseCloud();
     if (db) {
-      const session = JSON.parse(localStorage.getItem('radha_auth_user_v1') || '{}');
-      const targetDocs = [];
+      const targetDocRefs = [];
 
-      // A. Try session.id directly
-      if (session.id && session.id.length >= 10 && !session.id.startsWith('u_')) {
+      // A. Primary: Target document directly by User ID
+      if (targetUserId) {
         try {
-          const d = await db.collection('users').doc(session.id).get();
-          if (d.exists) targetDocs.push(d);
+          const docRef = db.collection('users').doc(targetUserId);
+          const d = await docRef.get();
+          if (d.exists) {
+            targetDocRefs.push(docRef);
+          }
         } catch (e) {}
       }
 
-      // B. Try phone number
+      // B. Secondary: Target by phone number if not found by ID
       const contactStr = String(emailOrPhone || session.phone || session.email || '').trim();
       const cleanPhone = contactStr.replace(/[\s\-\+]/g, '').slice(-10);
-      if (targetDocs.length === 0 && cleanPhone && cleanPhone.length === 10) {
+      if (targetDocRefs.length === 0 && cleanPhone && cleanPhone.length === 10) {
         let snap = await db.collection('users').where('phone', '==', cleanPhone).get();
         if (snap.empty) {
           snap = await db.collection('users').where('phone', '==', '+91' + cleanPhone).get();
         }
         if (!snap.empty) {
-          snap.forEach(d => targetDocs.push(d));
+          snap.forEach(d => targetDocRefs.push(d.ref));
         }
       }
 
-      // C. Try email
-      if (targetDocs.length === 0 && contactStr && contactStr.includes('@')) {
+      // C. Tertiary: Target by email
+      if (targetDocRefs.length === 0 && contactStr && contactStr.includes('@')) {
         const snap = await db.collection('users').where('email', '==', contactStr.toLowerCase()).get();
         if (!snap.empty) {
-          snap.forEach(d => targetDocs.push(d));
+          snap.forEach(d => targetDocRefs.push(d.ref));
         }
       }
 
-      if (targetDocs.length > 0) {
-        await Promise.all(targetDocs.map(doc => doc.ref.set(cleanData, { merge: true })));
+      if (targetDocRefs.length > 0) {
+        // Update all matched docs with cleanData
+        await Promise.all(targetDocRefs.map(ref => ref.set(cleanData, { merge: true })));
+        _log('User profile synced to Firebase Cloud for User ID:', targetUserId);
         return { success: true };
       } else {
-        // Create user document if it was only in local storage
-        const newDoc = await db.collection('users').add({
+        // Create user document directly with the user's specific ID
+        const finalDocId = targetUserId || (cleanPhone ? ('u_' + cleanPhone) : (contactStr ? ('u_' + contactStr.replace(/[^a-z0-9]/g, '_')) : ('u_' + Date.now())));
+        cleanData.id = finalDocId;
+        cleanData.userId = finalDocId;
+        await db.collection('users').doc(finalDocId).set({
           ...cleanData,
           createdAt: new Date().toISOString()
-        });
-        const session = JSON.parse(localStorage.getItem('radha_auth_user_v1') || '{}');
-        session.id = newDoc.id;
+        }, { merge: true });
+
+        // Update local session ID
+        session.id = finalDocId;
+        session.userId = finalDocId;
         localStorage.setItem('radha_auth_user_v1', JSON.stringify(session));
+        _log('Created new user document in Firebase Cloud with User ID:', finalDocId);
         return { success: true };
       }
     }
@@ -1038,9 +1074,10 @@ async function fbGetUserProfile(user) {
     if (!db) return null;
 
     let docSnap = null;
-    if (user.id && user.id.length >= 10 && !user.id.startsWith('u_')) {
+    const uid = String(user.id || user.userId || user.uid || '').trim();
+    if (uid) {
       try {
-        const d = await db.collection('users').doc(user.id).get();
+        const d = await db.collection('users').doc(uid).get();
         if (d.exists) docSnap = d;
       } catch (e) {}
     }
@@ -1066,11 +1103,13 @@ async function fbGetUserProfile(user) {
       const data = docSnap.data() || {};
       return {
         id: docSnap.id,
+        userId: docSnap.id,
         name: data.name || user.name || '',
         phone: data.phone || user.phone || '',
         email: data.email !== undefined ? data.email : (user.email || ''),
         city: data.city !== undefined ? data.city : (user.city || ''),
         address: data.address !== undefined ? data.address : (user.address || ''),
+        avatar: data.avatar || user.avatar || '',
         role: (data.role || user.role || 'user').toLowerCase(),
         updatedAt: data.updatedAt || 0
       };
@@ -1092,24 +1131,29 @@ function fbListenUserProfile(user, onChange) {
     if (!db) return;
     try {
       let targetDocRef = null;
-      if (user.id && user.id.length >= 10 && !user.id.startsWith('u_')) {
-        targetDocRef = db.collection('users').doc(user.id);
-      } else {
-        if (user.phone) {
-          const cleanPhone = String(user.phone).trim().replace(/[\s\-\+]/g, '').slice(-10);
-          if (cleanPhone.length === 10) {
-            let snap = await db.collection('users').where('phone', '==', cleanPhone).get();
-            if (snap.empty) {
-              snap = await db.collection('users').where('phone', '==', '+91' + cleanPhone).get();
-            }
-            if (!snap.empty) targetDocRef = snap.docs[0].ref;
+      const uid = String(user.id || user.userId || user.uid || '').trim();
+      if (uid) {
+        try {
+          const d = await db.collection('users').doc(uid).get();
+          if (d.exists) targetDocRef = d.ref;
+        } catch (e) {}
+      }
+
+      if (!targetDocRef && user.phone) {
+        const cleanPhone = String(user.phone).trim().replace(/[\s\-\+]/g, '').slice(-10);
+        if (cleanPhone.length === 10) {
+          let snap = await db.collection('users').where('phone', '==', cleanPhone).get();
+          if (snap.empty) {
+            snap = await db.collection('users').where('phone', '==', '+91' + cleanPhone).get();
           }
-        }
-        if (!targetDocRef && user.email) {
-          const cleanEmail = user.email.trim().toLowerCase();
-          const snap = await db.collection('users').where('email', '==', cleanEmail).get();
           if (!snap.empty) targetDocRef = snap.docs[0].ref;
         }
+      }
+
+      if (!targetDocRef && user.email) {
+        const cleanEmail = user.email.trim().toLowerCase();
+        const snap = await db.collection('users').where('email', '==', cleanEmail).get();
+        if (!snap.empty) targetDocRef = snap.docs[0].ref;
       }
 
       if (targetDocRef) {
@@ -1120,11 +1164,13 @@ function fbListenUserProfile(user, onChange) {
             if (typeof onChange === 'function') {
               onChange({
                 id: doc.id,
+                userId: doc.id,
                 name: data.name || user.name || '',
                 phone: data.phone || user.phone || '',
                 email: data.email !== undefined ? data.email : (user.email || ''),
                 city: data.city !== undefined ? data.city : (user.city || ''),
                 address: data.address !== undefined ? data.address : (user.address || ''),
+                avatar: data.avatar || user.avatar || '',
                 role: (data.role || user.role || 'user').toLowerCase(),
                 updatedAt: data.updatedAt || 0,
                 hasPendingWrites: !!isPending

@@ -3,97 +3,296 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Profile — Radhey Radhey Furniture Customer Area</title>
+  <title>Edit Profile & Photo — Radhey Radhey Furniture Customer Area</title>
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <link rel="apple-touch-icon" href="../assets/images/favicon.png">
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <!-- Google Firebase Cloud SDK (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <style>
+    body {
+      background-color: #F8F9FA;
+    }
+
     .dashboard-layout {
       display: grid;
-      grid-template-columns: 270px 1fr;
-      gap: 30px;
-      margin: 40px auto 70px;
+      grid-template-columns: 260px 1fr;
+      gap: 26px;
+      margin: 35px auto 70px;
     }
+
     .dash-sidebar {
       background: white;
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius-lg, 16px);
       padding: 24px;
-      border: 1px solid var(--border-light);
+      border: 1px solid var(--border-light, #E0DDD4);
       height: fit-content;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
+
+    .sidebar-avatar-wrap {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 12px;
+    }
+
     .dash-avatar {
-      width: 70px;
-      height: 70px;
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
-      background: black;
+      background: linear-gradient(135deg, #2B2927 0%, #181715 100%);
       color: white;
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 12px;
-      border: 3px solid var(--primary-red);
+      border: 3px solid #D6A419;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
     }
+
+    .dash-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .dash-menu a {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 12px 14px;
-      border-radius: var(--radius-sm);
-      color: slategray;
+      border-radius: 8px;
+      color: #4A4843;
       font-weight: 600;
       font-size: 0.92rem;
       margin-bottom: 6px;
       text-decoration: none;
-      transition: all var(--transition-fast);
+      transition: all 0.2s ease;
     }
-    .dash-menu a.active, .dash-menu a:hover {
-      background: rgba(200, 16, 46, 0.08);
-      color: var(--primary-red);
+
+    .dash-menu a.active,
+    .dash-menu a:hover {
+      background: #F0EFEB;
+      color: #21201D;
+      font-weight: 700;
     }
+
+    .dash-menu a.logout:hover {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+
     .profile-card {
       background: white;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border-light);
-      padding: 35px;
-      box-shadow: var(--shadow-sm);
+      border-radius: var(--radius-lg, 16px);
+      border: 1px solid var(--border-light, #E0DDD4);
+      padding: 32px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
+
+    /* Photo Upload Showcase Box */
+    .avatar-upload-card {
+      background: #FAFAF9;
+      border: 1px dashed #D5D9D9;
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .avatar-upload-preview {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: #21201D;
+      color: white;
+      font-size: 2.4rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #D6A419;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .avatar-upload-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-upload-controls {
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .avatar-upload-controls h4 {
+      margin: 0 0 6px 0;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #21201D;
+    }
+
+    .avatar-upload-controls p {
+      margin: 0 0 14px 0;
+      font-size: 0.85rem;
+      color: #6B685F;
+    }
+
+    .avatar-presets {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid #D5D9D9;
+      background: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .preset-btn:hover {
+      border-color: #D6A419;
+      transform: scale(1.1);
+    }
+
+    /* High-contrast Action Buttons */
+    .btn-action-primary {
+      background: #21201D;
+      color: #FFFFFF !important;
+      border: 1.5px solid #21201D;
+      padding: 11px 22px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s ease;
+    }
+
+    .btn-action-primary:hover {
+      background: #3F3D3A;
+      border-color: #3F3D3A;
+    }
+
+    .btn-action-secondary {
+      background: #FFFFFF;
+      color: #21201D !important;
+      border: 1.5px solid #D5D9D9;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action-secondary:hover {
+      background: #F7FAFA;
+      border-color: #A6A6A6;
+    }
+
+    .btn-action-danger {
+      background: #FFF5F5;
+      color: #DC2626 !important;
+      border: 1.5px solid #FCA5A5;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.86rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action-danger:hover {
+      background: #FEE2E2;
+      border-color: #F87171;
+    }
+
+    /* Form Fields */
     .form-group {
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
+
     .form-group label {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.86rem;
       font-weight: 700;
       margin-bottom: 6px;
-      color: slategray;
+      color: #4A4843;
     }
-    .form-group input, .form-group textarea {
+
+    .form-group input,
+    .form-group textarea {
       width: 100%;
-      padding: 11px 14px;
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      border: 1px solid #D5D9D9;
+      border-radius: 8px;
       font-size: 0.92rem;
       background: white;
       font-family: inherit;
       box-sizing: border-box;
-      transition: border-color var(--transition-fast);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
-    .form-group input:focus, .form-group textarea:focus {
-      border-color: var(--primary-red);
-      background: white;
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: #D6A419;
+      box-shadow: 0 0 0 3px rgba(214, 164, 25, 0.15);
       outline: none;
     }
+
+    .form-group small {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.78rem;
+      color: #8C8980;
+    }
+
     @media (max-width: 860px) {
       .dashboard-layout {
         grid-template-columns: 1fr;
+      }
+      .profile-card {
+        padding: 22px;
+      }
+      .avatar-upload-card {
+        justify-content: center;
+        text-align: center;
+      }
+      .avatar-presets {
+        justify-content: center;
       }
     }
   </style>
@@ -113,10 +312,24 @@
       </a>
 
       <div class="header-actions" style="margin-left: auto;">
-        <a href="../shop.html" class="action-btn"><span>Shop</span></a>
-        <a href="wishlist.html" class="action-btn"><span class="badge-count wishlist-count-badge" style="display: none;">0</span><span>Wishlist</span></a>
-        <a href="../cart.html" class="action-btn"><span class="badge-count cart-count-badge" style="display: none;">0</span><span>Cart</span></a>
-        <a href="dashboard.html" class="action-btn active"><span id="headerAccountName">Account</span></a>
+        <a href="../shop.html" class="action-btn" title="Browse Catalog">
+          <i class="bi bi-grid"></i>
+          <span>Shop</span>
+        </a>
+        <a href="wishlist.html" class="action-btn" title="Saved Wishlist">
+          <i class="bi bi-heart"></i>
+          <span class="badge-count wishlist-count-badge" style="display: none;">0</span>
+          <span>Wishlist</span>
+        </a>
+        <a href="../cart.html" class="action-btn" title="View Cart">
+          <i class="bi bi-cart3"></i>
+          <span class="badge-count cart-count-badge" style="display: none;">0</span>
+          <span>Cart</span>
+        </a>
+        <a href="dashboard.html" class="action-btn active" title="My Account">
+          <i class="bi bi-person"></i>
+          <span id="headerAccountName">Account</span>
+        </a>
       </div>
     </div>
   </header>
@@ -125,34 +338,73 @@
     <div class="dashboard-layout">
       <!-- SIDEBAR -->
       <aside class="dash-sidebar">
-        <div style="text-align: center; border-bottom: 1px solid var(--border-light); padding-bottom: 20px; margin-bottom: 20px;">
-          <div class="dash-avatar" id="dashAvatar">RR</div>
-          <h3 id="profileNameDisplay" style="font-size: 1.15rem; font-weight: 800; color: black; margin-bottom: 4px;">Valued Customer</h3>
-          <p id="profileEmailDisplay" style="font-size: 0.82rem; color: gray; margin: 0;">Registered Customer</p>
+        <div style="text-align: center; border-bottom: 1px solid var(--border-light, #E0DDD4); padding-bottom: 20px; margin-bottom: 20px;">
+          <div class="sidebar-avatar-wrap">
+            <div class="dash-avatar" id="sidebarAvatar">RR</div>
+          </div>
+          <h3 id="profileNameDisplay" style="font-size: 1.15rem; font-weight: 800; color: #21201D; margin: 0 0 4px 0;">Valued Customer</h3>
+          <p id="profileEmailDisplay" style="font-size: 0.82rem; color: #6B685F; margin: 0;">Registered Customer</p>
         </div>
 
         <nav class="dash-menu">
-          <a href="dashboard.html">📦 My Orders & Tracking</a>
-          <a href="profile.html" class="active">👤 Edit Profile</a>
-          <a href="wishlist.html">❤️ Saved Wishlist</a>
-          <a href="change-password.html">🔑 Change Password</a>
-          <a href="../index.html">🏠 Back to Store</a>
-          <a href="javascript:void(0)" onclick="logoutCustomer()" style="color: red;">🚪 Sign Out</a>
+          <a href="dashboard.html"><i class="bi bi-box-seam"></i> My Orders & Tracking</a>
+          <a href="profile.html" class="active"><i class="bi bi-person-circle"></i> Edit Personal Profile</a>
+          <a href="wishlist.html"><i class="bi bi-heart-fill" style="color: #DC2626;"></i> Saved Wishlist</a>
+          <a href="change-password.html"><i class="bi bi-shield-lock-fill"></i> Change Password</a>
+          <a href="../shop.html"><i class="bi bi-grid-fill"></i> Browse Catalog</a>
+          <a href="../index.html"><i class="bi bi-house-door-fill"></i> Back to Store</a>
+          <a href="javascript:void(0)" onclick="logoutCustomer()" class="logout" style="color: #DC2626;"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
         </nav>
       </aside>
 
       <!-- MAIN CONTENT -->
       <main>
         <div class="profile-card">
-          <div style="margin-bottom: 25px;">
-            <h2 style="font-family: var(--font-serif); font-size: 1.8rem; font-weight: 800; margin: 0 0 6px 0;">
-              Edit <span style="color: var(--primary-red);">Personal Profile</span>
+          <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border-light, #E0DDD4); padding-bottom: 16px;">
+            <h2 style="font-family: var(--font-serif); font-size: 1.75rem; font-weight: 800; margin: 0 0 6px 0; color: #21201D;">
+              Edit <span style="color: #D6A419;">Customer Profile & Photo</span>
             </h2>
-            <p style="color: gray; margin: 0; font-size: 0.92rem;">Update your delivery addresses, contact numbers, and personal info.</p>
+            <p style="color: #6B685F; margin: 0; font-size: 0.92rem;">
+              Apni profile photo, contact details aur default delivery addresses update karein.
+            </p>
           </div>
 
+          <!-- PHOTO ADD & EDIT SECTION -->
+          <div class="avatar-upload-card">
+            <div class="avatar-upload-preview" id="formAvatarPreview">RR</div>
+
+            <div class="avatar-upload-controls">
+              <h4>Profile Picture</h4>
+              <p>Apne device ya mobile camera se photo select karein ya stylish avatar choose karein.</p>
+
+              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <input type="file" id="profileImageInput" accept="image/*" style="display: none;" onchange="handleProfilePhotoChange(this)">
+                <button type="button" class="btn-action-primary" onclick="document.getElementById('profileImageInput').click()">
+                  <i class="bi bi-camera-fill" style="color: #D6A419;"></i>
+                  <span>Upload New Photo</span>
+                </button>
+                <button type="button" class="btn-action-danger" onclick="removeProfilePhotoFromForm()">
+                  <i class="bi bi-trash3-fill"></i>
+                  <span>Remove Photo</span>
+                </button>
+              </div>
+
+              <div style="margin-top: 14px;">
+                <span style="font-size: 0.78rem; font-weight: 700; color: #6B685F;">Or Pick Avatar Icon:</span>
+                <div class="avatar-presets">
+                  <button type="button" class="preset-btn" onclick="applyPresetIcon('👑')" title="Royal Icon">👑</button>
+                  <button type="button" class="preset-btn" onclick="applyPresetIcon('🛋️')" title="Furniture Master">🛋️</button>
+                  <button type="button" class="preset-btn" onclick="applyPresetIcon('✨')" title="Luxury Sparkle">✨</button>
+                  <button type="button" class="preset-btn" onclick="applyPresetIcon('🌿')" title="Nature Teak">🌿</button>
+                  <button type="button" class="preset-btn" onclick="applyPresetIcon('🛠️')" title="Craftsman Tools">🛠️</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FORM DETAILS -->
           <form id="profileForm" onsubmit="handleSaveProfile(event)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
               <div class="form-group">
                 <label>Full Name *</label>
                 <input type="text" id="profName" placeholder="Your Full Name" required>
@@ -161,13 +413,15 @@
               <div class="form-group">
                 <label>Mobile Number (WhatsApp) *</label>
                 <input type="tel" id="profPhone" placeholder="10-digit mobile" required pattern="[0-9]{10}">
+                <small>Used for real-time delivery WhatsApp tracking updates.</small>
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
               <div class="form-group">
                 <label>Email Address</label>
                 <input type="email" id="profEmail" placeholder="yourname@gmail.com">
+                <small>Used for order confirmations and digital invoices.</small>
               </div>
 
               <div class="form-group">
@@ -178,15 +432,18 @@
 
             <div class="form-group">
               <label>Default Shipping / Delivery Address *</label>
-              <textarea id="profAddress" rows="3" placeholder="Flat No., House Name, Street, Landmark, Area, Pincode" required></textarea>
+              <textarea id="profAddress" rows="3" placeholder="House/Flat No., Building Name, Street, Landmark, Area, City, Pincode" required></textarea>
+              <small>Orders will be safely delivered to this doorstep address.</small>
             </div>
 
-            <div style="margin-top: 25px; display: flex; align-items: center; gap: 14px;">
-              <button type="submit" id="saveProfileBtn" class="btn btn-red" style="padding: 13px 30px; font-weight: 800; font-size: 0.95rem;">
-                💾 Save Profile Updates
+            <div style="margin-top: 26px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+              <button type="submit" id="saveProfileBtn" class="btn-action-primary" style="padding: 13px 30px; font-size: 0.95rem;">
+                <i class="bi bi-check2-circle" style="font-size: 1.1rem; color: #D6A419;"></i>
+                <span>Save Profile & Photo Updates</span>
               </button>
-              <a href="dashboard.html" class="btn btn-outline" style="padding: 12px 20px;">
-                Cancel
+              <a href="dashboard.html" class="btn-action-secondary" style="padding: 12px 22px;">
+                <i class="bi bi-arrow-left"></i>
+                <span>Cancel & Go to Orders</span>
               </a>
             </div>
           </form>
@@ -211,6 +468,20 @@
       window.location.href = '../login.html?redirect=' + encodeURIComponent(window.location.pathname);
     }
 
+    let activeAvatarData = null;
+
+    function renderAvatar(elem, u, avatarOverride) {
+      if (!elem) return;
+      const av = avatarOverride !== undefined ? avatarOverride : (u ? u.avatar : null);
+      if (av && av.length > 15) {
+        elem.innerHTML = `<img src="${av}" alt="${u ? u.name : 'User'}" onerror="this.parentElement.textContent='${((u && u.name) || 'RR').slice(0,2).toUpperCase()}';">`;
+      } else {
+        const role = (u && u.role || 'user').toLowerCase();
+        const isAdminOrSuper = (role === 'admin' || role === 'superadmin');
+        elem.textContent = isAdminOrSuper ? (role === 'superadmin' ? '👑' : '🛡️') : ((u && u.name) ? u.name.slice(0, 2).toUpperCase() : 'RR');
+      }
+    }
+
     function fillProfileForm(u) {
       if (!u) return;
       const role = (u.role || 'user').toLowerCase();
@@ -220,14 +491,15 @@
         const nameInput = document.getElementById('profName');
         if (nameInput && document.activeElement !== nameInput) nameInput.value = u.name;
         document.getElementById('profileNameDisplay').textContent = u.name;
-        document.getElementById('dashAvatar').textContent = isAdminOrSuper ? (role === 'superadmin' ? '👑' : '🛡️') : u.name.slice(0, 2).toUpperCase();
         const hdr = document.getElementById('headerAccountName');
         if (hdr) hdr.textContent = u.name.split(' ')[0];
       }
+
       if (u.phone) {
         const phoneInput = document.getElementById('profPhone');
         if (phoneInput && document.activeElement !== phoneInput) phoneInput.value = u.phone;
       }
+
       if (u.email) {
         const emailInput = document.getElementById('profEmail');
         if (emailInput && document.activeElement !== emailInput) emailInput.value = u.email;
@@ -235,29 +507,145 @@
       } else if (u.phone) {
         document.getElementById('profileEmailDisplay').textContent = '+91 ' + u.phone + (isAdminOrSuper ? ` (${role.toUpperCase()})` : '');
       }
+
       if (u.city) {
         const cityInput = document.getElementById('profCity');
         if (cityInput && document.activeElement !== cityInput) cityInput.value = u.city;
       }
+
       if (u.address) {
         const addrInput = document.getElementById('profAddress');
         if (addrInput && document.activeElement !== addrInput) addrInput.value = u.address;
       }
 
+      // Render Avatar
+      activeAvatarData = u.avatar || null;
+      renderAvatar(document.getElementById('sidebarAvatar'), u, activeAvatarData);
+      renderAvatar(document.getElementById('formAvatarPreview'), u, activeAvatarData);
+
       if (isAdminOrSuper) {
         const menu = document.querySelector('.dash-menu');
         if (menu) {
           menu.innerHTML = `
-            <a href="../admin/dashboard.html" style="font-weight: 700; color: dodgerblue;">📊 Admin Dashboard</a>
-            <a href="../admin/manage-orders.html" style="font-weight: 700; color: dodgerblue;">📦 Manage All Orders</a>
-            <a href="../admin/manage-products.html" style="font-weight: 700;">🛋️ Manage Products</a>
-            <a href="../admin/site-settings.html" style="font-weight: 700;">⚙️ Website Settings</a>
-            <a href="profile.html" class="active">👤 Edit Profile</a>
-            <a href="wishlist.html">❤️ My Saved Wishlist</a>
-            <a href="../index.html">🏠 Back to Store</a>
-            <a href="javascript:void(0)" onclick="logoutCustomer()" style="color: red;">🚪 Sign Out</a>
+            <a href="../admin/dashboard.html" style="font-weight: 700; color: #2563EB;"><i class="bi bi-speedometer2"></i> Admin Dashboard</a>
+            <a href="../admin/manage-orders.html" style="font-weight: 700; color: #2563EB;"><i class="bi bi-boxes"></i> Manage All Orders</a>
+            <a href="../admin/manage-products.html" style="font-weight: 700;"><i class="bi bi-grid-fill"></i> Manage Products</a>
+            <a href="../admin/site-settings.html" style="font-weight: 700;"><i class="bi bi-gear-fill"></i> Website Settings</a>
+            <a href="profile.html" class="active"><i class="bi bi-person-circle"></i> Edit Personal Profile</a>
+            <a href="wishlist.html"><i class="bi bi-heart-fill" style="color: #DC2626;"></i> My Saved Wishlist</a>
+            <a href="../index.html"><i class="bi bi-house-door-fill"></i> Back to Store</a>
+            <a href="javascript:void(0)" onclick="logoutCustomer()" class="logout" style="color: #DC2626;"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
           `;
         }
+      }
+    }
+
+    // Handle photo file selection and client-side canvas compression
+    function handleProfilePhotoChange(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image (JPG, PNG, WEBP)', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const size = 250;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+
+          let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
+          if (img.width > img.height) {
+            srcW = img.height;
+            srcX = (img.width - img.height) / 2;
+          } else if (img.height > img.width) {
+            srcH = img.width;
+            srcY = (img.height - img.width) / 2;
+          }
+
+          ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, size, size);
+          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+
+          activeAvatarData = compressed;
+          const u = getLoggedInCustomer();
+          renderAvatar(document.getElementById('formAvatarPreview'), u, activeAvatarData);
+          renderAvatar(document.getElementById('sidebarAvatar'), u, activeAvatarData);
+          showToast('Photo selected! Click "Save Profile & Photo Updates" to apply.', 'info');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Apply Preset Icon Avatar
+    function applyPresetIcon(emoji) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 200;
+      canvas.height = 200;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, 200, 200);
+      grad.addColorStop(0, '#2B2927');
+      grad.addColorStop(1, '#181715');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 200, 200);
+
+      ctx.font = '90px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(emoji, 100, 108);
+
+      activeAvatarData = canvas.toDataURL('image/jpeg', 0.9);
+      const u = getLoggedInCustomer();
+      renderAvatar(document.getElementById('formAvatarPreview'), u, activeAvatarData);
+      renderAvatar(document.getElementById('sidebarAvatar'), u, activeAvatarData);
+      showToast(`Selected ${emoji} avatar preset! Click Save to apply.`, 'info');
+    }
+
+    function removeProfilePhotoFromForm() {
+      activeAvatarData = '';
+      const u = getLoggedInCustomer();
+      renderAvatar(document.getElementById('formAvatarPreview'), u, '');
+      renderAvatar(document.getElementById('sidebarAvatar'), u, '');
+      showToast('Photo removed preview. Click Save to confirm.', 'info');
+    }
+
+    // Handle form submit
+    async function handleSaveProfile(e) {
+      e.preventDefault();
+      const saveBtn = document.getElementById('saveProfileBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Saving Changes...</span>';
+
+      const updated = {
+        name: document.getElementById('profName').value.trim(),
+        phone: document.getElementById('profPhone').value.trim(),
+        email: document.getElementById('profEmail').value.trim(),
+        city: document.getElementById('profCity').value.trim(),
+        address: document.getElementById('profAddress').value.trim()
+      };
+
+      if (activeAvatarData !== null) {
+        updated.avatar = activeAvatarData;
+      }
+
+      try {
+        await updateCustomerProfileInDB(updated);
+        const cur = getLoggedInCustomer();
+        fillProfileForm(cur);
+        showToast('Profile and photo updated successfully!', 'success');
+      } catch (err) {
+        console.error('Error updating profile:', err);
+        showToast('Failed to update profile. Please try again.', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check2-circle" style="color: #D6A419;"></i> <span>Save Profile & Photo Updates</span>';
       }
     }
 
@@ -273,33 +661,6 @@
         fillProfileForm(e.detail);
       }
     });
-
-    async function handleSaveProfile(e) {
-      e.preventDefault();
-      const saveBtn = document.getElementById('saveProfileBtn');
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving Changes...';
-
-      const updated = {
-        name: document.getElementById('profName').value.trim(),
-        phone: document.getElementById('profPhone').value.trim(),
-        email: document.getElementById('profEmail').value.trim(),
-        city: document.getElementById('profCity').value.trim(),
-        address: document.getElementById('profAddress').value.trim()
-      };
-
-      try {
-        await updateCustomerProfileInDB(updated);
-        fillProfileForm(getLoggedInCustomer());
-        showToast('Profile updated successfully!', 'success');
-      } catch (err) {
-        console.error('Error updating profile:', err);
-        showToast('Failed to update profile. Please try again.', 'error');
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = '💾 Save Profile Updates';
-      }
-    }
   </script>
 </body>
 </html>

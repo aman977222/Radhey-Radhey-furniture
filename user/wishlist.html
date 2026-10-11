@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <link rel="apple-touch-icon" href="../assets/images/favicon.png">
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <!-- Google Firebase Cloud SDK (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -199,10 +200,24 @@
       </a>
 
       <div class="header-actions" style="margin-left: auto;">
-        <a href="../shop.html" class="action-btn"><span>Shop</span></a>
-        <a href="wishlist.html" class="action-btn active"><span class="badge-count wishlist-count-badge" style="display: none;">0</span><span>Wishlist</span></a>
-        <a href="../cart.html" class="action-btn"><span class="badge-count cart-count-badge" style="display: none;">0</span><span>Cart</span></a>
-        <a href="dashboard.html" class="action-btn"><span id="headerAccountName">Account</span></a>
+        <a href="../shop.html" class="action-btn" title="Browse Catalog">
+          <i class="bi bi-grid"></i>
+          <span>Shop</span>
+        </a>
+        <a href="wishlist.html" class="action-btn active" title="Saved Wishlist">
+          <i class="bi bi-heart"></i>
+          <span class="badge-count wishlist-count-badge" style="display: none;">0</span>
+          <span>Wishlist</span>
+        </a>
+        <a href="../cart.html" class="action-btn" title="View Cart">
+          <i class="bi bi-cart3"></i>
+          <span class="badge-count cart-count-badge" style="display: none;">0</span>
+          <span>Cart</span>
+        </a>
+        <a href="dashboard.html" class="action-btn" title="My Account">
+          <i class="bi bi-person"></i>
+          <span id="headerAccountName">Account</span>
+        </a>
       </div>
     </div>
   </header>
@@ -302,7 +317,14 @@
       // Setup customer details in sidebar
       if (currentUser.name) {
         document.getElementById('profileNameDisplay').textContent = currentUser.name;
-        document.getElementById('dashAvatar').textContent = isAdminOrSuper ? (role === 'superadmin' ? '👑' : '🛡️') : currentUser.name.slice(0, 2).toUpperCase();
+        const avElem = document.getElementById('dashAvatar');
+        if (avElem) {
+          if (currentUser.avatar && currentUser.avatar.length > 15) {
+            avElem.innerHTML = `<img src="${currentUser.avatar}" alt="${currentUser.name}" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;">`;
+          } else {
+            avElem.textContent = isAdminOrSuper ? (role === 'superadmin' ? '👑' : '🛡️') : currentUser.name.slice(0, 2).toUpperCase();
+          }
+        }
         const hdr = document.getElementById('headerAccountName');
         if (hdr) hdr.textContent = currentUser.name.split(' ')[0];
       }

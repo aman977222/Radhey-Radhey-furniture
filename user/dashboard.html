@@ -7,48 +7,299 @@
   <link rel="icon" type="image/png" href="../assets/images/favicon.png">
   <link rel="apple-touch-icon" href="../assets/images/favicon.png">
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- HTML2PDF CDN for Instant PDF Download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <!-- Google Firebase Cloud SDK (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <style>
-    .dashboard-layout {
-      display: grid;
-      grid-template-columns: 270px 1fr;
-      gap: 30px;
-      margin: 40px auto 70px;
+    /* =========================================================
+       AMAZON-STYLE USER AREA & TRACKING REDESIGN
+       ========================================================= */
+    :root {
+      --amz-green: #067D62;
+      --amz-green-light: #E7F4EE;
+      --amz-blue: #007185;
+      --amz-blue-light: #EDF6F8;
+      --amz-gold: #C45500;
+      --amz-bg: #F0F2F2;
+      --amz-border: #D5D9D9;
+      --amz-header-bg: #F7FAFA;
     }
 
-    .dash-sidebar {
+    body {
+      background-color: #F8F9FA;
+    }
+
+    /* Hero Profile Section */
+    .user-hero-card {
       background: white;
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      border: 1px solid var(--border-light);
-      height: fit-content;
-      box-shadow: var(--shadow-sm);
+      border-radius: var(--radius-lg, 16px);
+      border: 1px solid var(--border-light, #E0DDD4);
+      padding: 24px 28px;
+      margin: 30px auto 24px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      position: relative;
+      overflow: hidden;
     }
 
-    .dash-user-card {
-      text-align: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border-light);
-      margin-bottom: 20px;
+    .user-hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      background: var(--primary-red, #3F3D3A);
     }
 
-    .dash-avatar {
-      width: 70px;
-      height: 70px;
+    .user-profile-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    /* Interactive Avatar with Edit Badge */
+    .avatar-wrapper {
+      position: relative;
+      width: 82px;
+      height: 82px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .avatar-circle {
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
-      background: black;
+      background: linear-gradient(135deg, #2B2927 0%, #181715 100%);
       color: white;
-      font-size: 1.5rem;
+      font-size: 1.7rem;
       font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 12px;
-      border: 3px solid var(--primary-red);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border: 3px solid #D6A419;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .avatar-wrapper:hover .avatar-circle {
+      transform: scale(1.03);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    }
+
+    .avatar-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .avatar-edit-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #D6A419;
+      color: #181715;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      border: 2px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .avatar-wrapper:hover .avatar-edit-badge {
+      background: #EBB830;
+      transform: scale(1.1);
+    }
+
+    .user-info-text h1 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #21201D;
+      margin: 0 0 5px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .user-badge {
+      font-size: 0.74rem;
+      font-weight: 700;
+      background: rgba(214, 164, 25, 0.15);
+      color: #8C6500;
+      border: 1px solid rgba(214, 164, 25, 0.4);
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .user-info-text p {
+      margin: 3px 0;
+      font-size: 0.88rem;
+      color: #4A4843;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .user-info-text i {
+      color: #D6A419;
+      font-size: 0.95rem;
+    }
+
+    /* High-Contrast Hero Action Buttons (Solves Invisible Text) */
+    .user-hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-hero-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      line-height: 1.3;
+    }
+
+    .btn-hero-secondary {
+      background: #FFFFFF;
+      color: #21201D !important;
+      border: 1.5px solid #D6A419;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .btn-hero-secondary:hover {
+      background: #FDF9EE;
+      border-color: #BD9013;
+      color: #181715 !important;
+    }
+
+    .btn-hero-primary {
+      background: #21201D;
+      color: #FFFFFF !important;
+      border: 1.5px solid #21201D;
+      box-shadow: 0 2px 6px rgba(33, 32, 29, 0.2);
+    }
+
+    .btn-hero-primary:hover {
+      background: #3F3D3A;
+      border-color: #3F3D3A;
+      color: #FFFFFF !important;
+    }
+
+    .btn-hero-danger {
+      background: #FFF5F5;
+      color: #DC2626 !important;
+      border: 1.5px solid #FCA5A5;
+    }
+
+    .btn-hero-danger:hover {
+      background: #FEE2E2;
+      border-color: #F87171;
+      color: #B91C1C !important;
+    }
+
+    /* KPI Quick Stats Cards */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .kpi-card {
+      background: white;
+      border-radius: var(--radius-md, 10px);
+      border: 1px solid var(--border-light, #E0DDD4);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 14px rgba(0,0,0,0.06);
+    }
+
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.45rem;
+      flex-shrink: 0;
+    }
+
+    .kpi-card.total .kpi-icon { background: #EEF2F6; color: #1E293B; }
+    .kpi-card.crafting .kpi-icon { background: #FEF3C7; color: #92400E; }
+    .kpi-card.dispatched .kpi-icon { background: #E0E7FF; color: #3730A3; }
+    .kpi-card.delivered .kpi-icon { background: #DCFCE7; color: #166534; }
+
+    .kpi-meta h4 {
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #181715;
+      line-height: 1.1;
+    }
+
+    .kpi-meta span {
+      font-size: 0.8rem;
+      color: #6B685F;
+      font-weight: 600;
+    }
+
+    /* Main Layout with Sidebar */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 26px;
+      margin-bottom: 70px;
+    }
+
+    .dash-sidebar {
+      background: white;
+      border-radius: var(--radius-lg, 16px);
+      padding: 20px;
+      border: 1px solid var(--border-light, #E0DDD4);
+      height: fit-content;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
 
     .dash-menu a {
@@ -56,71 +307,753 @@
       align-items: center;
       gap: 12px;
       padding: 12px 14px;
-      border-radius: var(--radius-sm);
-      color: slategray;
+      border-radius: 8px;
+      color: #4A4843;
       font-weight: 600;
       font-size: 0.92rem;
       margin-bottom: 6px;
-      transition: all var(--transition-fast);
       text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .dash-menu a i {
+      font-size: 1.1rem;
     }
 
     .dash-menu a.active,
     .dash-menu a:hover {
-      background: rgba(200, 16, 46, 0.08);
-      color: var(--primary-red);
+      background: #F0EFEB;
+      color: #21201D;
+      font-weight: 700;
     }
 
-    .order-card {
+    .dash-menu a.logout:hover {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+
+    /* Filter Toolbar & Search */
+    .orders-toolbar {
       background: white;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border-light);
-      padding: 24px;
+      border-radius: var(--radius-md, 10px);
+      border: 1px solid var(--border-light, #E0DDD4);
+      padding: 12px 16px;
       margin-bottom: 20px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .order-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border-light);
-      padding-bottom: 14px;
-      margin-bottom: 16px;
+      justify-content: space-between;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .status-badge {
-      background: honeydew;
-      color: forestgreen;
-      font-weight: 800;
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.8rem;
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tab {
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid var(--border-light, #E0DDD4);
+      background: white;
+      color: #4A4843;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-tab.active,
+    .filter-tab:hover {
+      background: #21201D;
+      color: white;
+      border-color: #21201D;
+    }
+
+    .search-box {
+      position: relative;
+      min-width: 240px;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      border: 1px solid var(--border-light, #E0DDD4);
+      border-radius: 20px;
+      font-size: 0.86rem;
+      background: #FAFAF9;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .search-box input:focus {
+      border-color: #21201D;
+      background: white;
+    }
+
+    .search-box .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9C9990;
+      font-size: 0.95rem;
+    }
+
+    /* =========================================================
+       AMAZON-STYLE ORDER CARD
+       ========================================================= */
+    .amz-order-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #D5D9D9;
+      margin-bottom: 22px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      transition: box-shadow 0.2s ease;
+    }
+
+    .amz-order-card:hover {
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    /* Amazon Order Header Bar */
+    .amz-order-header {
+      background: #F0F2F2;
+      border-bottom: 1px solid #D5D9D9;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.84rem;
+    }
+
+    .amz-header-col-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 26px;
+      flex-wrap: wrap;
+    }
+
+    .amz-header-col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .amz-header-col .label {
+      color: #565959;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
+
+    .amz-header-col .val {
+      color: #0F1111;
+      font-weight: 700;
+    }
+
+    .amz-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      flex-wrap: wrap;
+    }
+
+    .amz-copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #007185;
+      font-size: 0.82rem;
+      padding: 2px 4px;
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      font-weight: 700;
     }
 
-    .status-badge.crafting {
-      background: bisque;
-      color: brown;
+    .amz-copy-btn:hover {
+      text-decoration: underline;
+      color: #C45500;
     }
 
-    .status-badge.dispatched {
-      background: lavender;
-      color: darkblue;
+    /* Amazon Order Main Body */
+    .amz-order-body {
+      padding: 22px 20px;
     }
 
-    .status-badge.cancelled {
-      background: mistyrose;
-      color: darkred;
+    /* Delivery Status Banner */
+    .amz-delivery-status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .amz-delivery-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .amz-delivery-title.delivered { color: #067D62; }
+    .amz-delivery-title.dispatched { color: #007185; }
+    .amz-delivery-title.crafting { color: #C45500; }
+    .amz-delivery-title.confirmed { color: #21201D; }
+    .amz-delivery-title.cancelled { color: #C40000; }
+
+    .amz-delivery-sub {
+      color: #565959;
+      font-size: 0.88rem;
+      margin: 3px 0 0 0;
+    }
+
+    /* =========================================================
+       AMAZON-STYLE 5-STEP DELIVERY PROGRESS BAR (STEPPER)
+       ========================================================= */
+    .amz-stepper-wrap {
+      margin: 20px 0 26px;
+      padding: 16px 14px;
+      background: #FAFAF9;
+      border-radius: 10px;
+      border: 1px solid #EBE9E1;
+    }
+
+    .amz-stepper {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 0 20px;
+    }
+
+    .amz-stepper-line-bg {
+      position: absolute;
+      top: 14px;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: #E3E6E6;
+      border-radius: 4px;
+      z-index: 1;
+    }
+
+    .amz-stepper-line-fill {
+      position: absolute;
+      top: 14px;
+      left: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #067D62 0%, #10B981 100%);
+      border-radius: 4px;
+      z-index: 2;
+      transition: width 0.4s ease;
+    }
+
+    .amz-step-item {
+      position: relative;
+      z-index: 3;
+      text-align: center;
+      width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .amz-step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #D5D9D9;
+      color: #565959;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .amz-step-item.completed .amz-step-dot {
+      background: #067D62;
+      border-color: #067D62;
+      color: white;
+    }
+
+    .amz-step-item.active .amz-step-dot {
+      background: #067D62;
+      border-color: #067D62;
+      color: white;
+      box-shadow: 0 0 0 5px rgba(6, 125, 98, 0.22);
+      animation: pulseActive 2s infinite;
+    }
+
+    @keyframes pulseActive {
+      0% { box-shadow: 0 0 0 3px rgba(6, 125, 98, 0.25); }
+      50% { box-shadow: 0 0 0 7px rgba(6, 125, 98, 0.12); }
+      100% { box-shadow: 0 0 0 3px rgba(6, 125, 98, 0.25); }
+    }
+
+    .amz-step-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #565959;
+      line-height: 1.2;
+    }
+
+    .amz-step-item.completed .amz-step-label,
+    .amz-step-item.active .amz-step-label {
+      color: #0F1111;
+      font-weight: 800;
+    }
+
+    .amz-step-item.active .amz-step-label {
+      color: #067D62;
+    }
+
+    /* Cancelled Stepper */
+    .amz-stepper-wrap.cancelled .amz-stepper-line-fill {
+      background: #DC2626;
+    }
+    .amz-stepper-wrap.cancelled .amz-step-item.active .amz-step-dot {
+      background: #DC2626;
+      border-color: #DC2626;
+      box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.2);
+    }
+    .amz-stepper-wrap.cancelled .amz-step-item.active .amz-step-label {
+      color: #DC2626;
+    }
+
+    /* Ordered Items List */
+    .amz-items-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-top: 1px solid #EBE9E1;
+      padding-top: 18px;
+    }
+
+    .amz-item-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .amz-item-img {
+      width: 76px;
+      height: 76px;
+      border-radius: 8px;
+      border: 1px solid #D5D9D9;
+      object-fit: cover;
+      background: white;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .amz-item-img:hover {
+      transform: scale(1.05);
+    }
+
+    .amz-item-info {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .amz-item-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #007185;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .amz-item-title:hover {
+      color: #C45500;
+      text-decoration: underline;
+    }
+
+    .amz-item-meta {
+      font-size: 0.82rem;
+      color: #565959;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .amz-item-price {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0F1111;
+    }
+
+    .amz-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons Amazon Style */
+    .btn-amz-yellow {
+      background: #FFD814;
+      border: 1px solid #FCD200;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #0F1111 !important;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      transition: background 0.15s ease;
+    }
+
+    .btn-amz-yellow:hover {
+      background: #F7CA00;
+    }
+
+    .btn-amz-white {
+      background: white;
+      border: 1px solid #D5D9D9;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #0F1111 !important;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn-amz-white:hover {
+      background: #F7FAFA;
+      border-color: #A6A6A6;
+    }
+
+    .amz-order-footer {
+      border-top: 1px solid #EBE9E1;
+      margin-top: 16px;
+      padding-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.84rem;
+      color: #565959;
+    }
+
+    /* =========================================================
+       MODAL STYLES (AVATAR UPLOAD, TRACKING DETAILS, INVOICE)
+       ========================================================= */
+    .rr-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      z-index: 99999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .rr-modal-box {
+      background: white;
+      border-radius: 16px;
+      max-width: 580px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      position: relative;
+      animation: modalFadeIn 0.25s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .rr-modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid #E0DDD4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .rr-modal-header h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #21201D;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rr-modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #8C8980;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+
+    .rr-modal-close:hover {
+      color: #21201D;
+    }
+
+    .rr-modal-body {
+      padding: 22px 24px;
+    }
+
+    /* Avatar Edit Modal Items */
+    .avatar-preview-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .avatar-preview-circle {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: #21201D;
+      color: white;
+      font-size: 3rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #D6A419;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .avatar-preview-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-presets {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .preset-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid #E0DDD4;
+      background: #FAFAF9;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .preset-btn:hover {
+      border-color: #D6A419;
+      transform: scale(1.1);
+    }
+
+    /* Interactive Timeline In Tracking Modal */
+    .tracking-timeline {
+      position: relative;
+      padding-left: 28px;
+      margin-top: 18px;
+    }
+
+    .tracking-timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 6px;
+      bottom: 6px;
+      width: 3px;
+      background: #067D62;
+    }
+
+    .timeline-node {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .timeline-node:last-child {
+      margin-bottom: 0;
+    }
+
+    .timeline-node::before {
+      content: '✓';
+      position: absolute;
+      left: -28px;
+      top: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #067D62;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 3px white;
+    }
+
+    .timeline-node.future::before {
+      content: '';
+      background: #D5D9D9;
+    }
+
+    .timeline-node h5 {
+      margin: 0 0 3px 0;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #0F1111;
+    }
+
+    .timeline-node p {
+      margin: 0;
+      font-size: 0.82rem;
+      color: #565959;
+    }
+
+    .timeline-node .node-time {
+      font-size: 0.74rem;
+      color: #8C8980;
+      margin-top: 2px;
+    }
+
+    /* Invoice Modal Action Buttons (Fixed Text & Added Download) */
+    .invoice-modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #EBE9E1;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: #FAFAF9;
+      border-radius: 0 0 16px 16px;
+    }
+
+    .btn-invoice-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .btn-invoice-close {
+      background: #FFFFFF;
+      color: #4A4843 !important;
+      border: 1px solid #D5D9D9;
+    }
+
+    .btn-invoice-close:hover {
+      background: #F0EFEB;
+      color: #21201D !important;
+    }
+
+    .btn-invoice-print {
+      background: #FFFFFF;
+      color: #0F1111 !important;
+      border: 1px solid #D5D9D9;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .btn-invoice-print:hover {
+      background: #F7FAFA;
+      border-color: #A6A6A6;
+    }
+
+    .btn-invoice-download {
+      background: #FFD814;
+      color: #0F1111 !important;
+      border: 1px solid #FCD200;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .btn-invoice-download:hover {
+      background: #F7CA00;
+      border-color: #F2BA00;
     }
 
     @media (max-width: 860px) {
       .dashboard-layout {
         grid-template-columns: 1fr;
+      }
+      .amz-stepper {
+        margin: 0 5px;
+      }
+      .amz-step-item {
+        width: 60px;
+      }
+      .amz-step-label {
+        font-size: 0.65rem;
+      }
+      .amz-step-dot {
+        width: 26px;
+        height: 26px;
+        font-size: 0.68rem;
+      }
+      .user-hero-card {
+        padding: 20px;
+      }
+      .invoice-modal-footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .invoice-modal-footer button {
+        justify-content: center;
       }
     }
   </style>
@@ -141,17 +1074,21 @@
 
       <div class="header-actions" style="margin-left: auto;">
         <a href="../shop.html" class="action-btn" title="Browse Catalog">
+          <i class="bi bi-grid"></i>
           <span>Shop</span>
         </a>
         <a href="wishlist.html" class="action-btn" title="Saved Wishlist">
+          <i class="bi bi-heart"></i>
           <span class="badge-count wishlist-count-badge" style="display: none;">0</span>
           <span>Wishlist</span>
         </a>
         <a href="../cart.html" class="action-btn" title="View Cart">
+          <i class="bi bi-cart3"></i>
           <span class="badge-count cart-count-badge" style="display: none;">0</span>
           <span>Cart</span>
         </a>
         <a href="dashboard.html" class="action-btn active" title="My Account">
+          <i class="bi bi-person"></i>
           <span id="headerAccountName">Account</span>
         </a>
       </div>
@@ -159,62 +1096,277 @@
   </header>
 
   <div class="container">
+    <!-- ================= 1. HERO USER PROFILE CARD ================= -->
+    <div class="user-hero-card">
+      <div class="user-profile-meta">
+        <!-- Interactive Avatar with Camera Upload Icon -->
+        <div class="avatar-wrapper" onclick="openAvatarModal()" title="Click to Add or Change Photo">
+          <div class="avatar-circle" id="heroAvatar">RR</div>
+          <div class="avatar-edit-badge" title="Upload Photo"><i class="bi bi-camera-fill"></i></div>
+        </div>
+
+        <div class="user-info-text">
+          <h1>
+            <span id="heroUserName">Valued Customer</span>
+            <span class="user-badge" id="heroUserBadge"><i class="bi bi-patch-check-fill" style="color: #D6A419;"></i> Verified Customer</span>
+          </h1>
+          <p>
+            <i class="bi bi-telephone-fill"></i> <span id="heroUserPhone">Fetching phone...</span>
+            <span style="color: #D5D9D9; margin: 0 4px;">•</span>
+            <i class="bi bi-envelope-fill"></i> <span id="heroUserEmail">Fetching email...</span>
+          </p>
+          <p style="font-size: 0.82rem; color: #6B685F; margin-top: 4px;">
+            <i class="bi bi-geo-alt-fill"></i> <span id="heroUserCity">Registered Customer</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Buttons with Crisp Visible Text & Icons -->
+      <div class="user-hero-actions">
+        <button type="button" class="btn-hero-action btn-hero-secondary" onclick="openAvatarModal()">
+          <i class="bi bi-camera-fill" style="color: #D6A419; font-size: 1.05rem;"></i>
+          <span>Change Photo</span>
+        </button>
+        <a href="profile.html" class="btn-hero-action btn-hero-primary">
+          <i class="bi bi-person-fill-gear" style="font-size: 1.05rem;"></i>
+          <span>Edit Profile</span>
+        </a>
+        <a href="javascript:void(0)" onclick="logoutCustomer()" class="btn-hero-action btn-hero-danger">
+          <i class="bi bi-box-arrow-right" style="font-size: 1.05rem;"></i>
+          <span>Sign Out</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ================= 2. QUICK STATS (KPI CARDS) ================= -->
+    <div class="kpi-row">
+      <div class="kpi-card total" onclick="filterOrdersByStatus('all')">
+        <div class="kpi-icon"><i class="bi bi-box-seam-fill"></i></div>
+        <div class="kpi-meta">
+          <h4 id="kpiTotalOrders">0</h4>
+          <span>Total Orders</span>
+        </div>
+      </div>
+
+      <div class="kpi-card crafting" onclick="filterOrdersByStatus('crafting')">
+        <div class="kpi-icon"><i class="bi bi-hammer"></i></div>
+        <div class="kpi-meta">
+          <h4 id="kpiCraftingOrders">0</h4>
+          <span>Workshop Crafting</span>
+        </div>
+      </div>
+
+      <div class="kpi-card dispatched" onclick="filterOrdersByStatus('dispatched')">
+        <div class="kpi-icon"><i class="bi bi-truck"></i></div>
+        <div class="kpi-meta">
+          <h4 id="kpiDispatchedOrders">0</h4>
+          <span>On The Way / Shipped</span>
+        </div>
+      </div>
+
+      <div class="kpi-card delivered" onclick="filterOrdersByStatus('delivered')">
+        <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="kpi-meta">
+          <h4 id="kpiDeliveredOrders">0</h4>
+          <span>Successfully Delivered</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Notification Banner -->
+    <div id="adminNoticeBanner" style="display: none; background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; color: #92400E;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+            <i class="bi bi-shield-fill-check"></i> Administrator Mode Active
+          </div>
+          <div style="font-size: 0.88rem; color: #B45309;">
+            Aap Administrator ke roop me logged in hain. Sabhi customers ke orders dekhne aur status update karne ke liye Admin Orders Panel kholein.
+          </div>
+        </div>
+        <a href="../admin/manage-orders.html" class="btn btn-dark" style="background: #1E293B; color: white; padding: 8px 18px; font-size: 0.88rem; border-radius: 6px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="bi bi-boxes"></i> Manage All Orders in Admin Panel →
+        </a>
+      </div>
+    </div>
+
+    <!-- ================= 3. DASHBOARD LAYOUT ================= -->
     <div class="dashboard-layout">
       <!-- SIDEBAR -->
       <aside class="dash-sidebar">
-        <div class="dash-user-card">
-          <div class="dash-avatar" id="dashAvatar">RR</div>
-          <h3 style="font-size: 1.15rem; font-weight: 800; color: black; margin-bottom: 4px;" id="dashUserName">Valued Customer</h3>
-          <p style="font-size: 0.82rem; color: gray; margin: 0;" id="dashUserEmail">Registered Member</p>
+        <div style="text-align: center; border-bottom: 1px solid var(--border-light, #E0DDD4); padding-bottom: 16px; margin-bottom: 16px;">
+          <div style="font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #8C8980;">Navigation</div>
         </div>
 
         <nav class="dash-menu">
-          <a href="dashboard.html" class="active">📦 My Orders & Tracking</a>
-          <a href="profile.html">👤 Edit Profile</a>
-          <a href="wishlist.html">❤️ Saved Wishlist</a>
-          <a href="change-password.html">🔑 Change Password</a>
-          <a href="../index.html">🏠 Back to Store</a>
-          <a href="javascript:void(0)" onclick="logoutCustomer()" style="color: red;">🚪 Sign Out</a>
+          <a href="dashboard.html" class="active"><i class="bi bi-box-seam"></i> My Orders & Tracking</a>
+          <a href="profile.html"><i class="bi bi-person-circle"></i> Personal Profile</a>
+          <a href="wishlist.html"><i class="bi bi-heart-fill" style="color: #DC2626;"></i> Saved Wishlist</a>
+          <a href="change-password.html"><i class="bi bi-shield-lock-fill"></i> Security & Password</a>
+          <a href="../shop.html"><i class="bi bi-grid-fill"></i> Browse Catalog</a>
+          <a href="../index.html"><i class="bi bi-house-door-fill"></i> Back to Store</a>
+          <a href="javascript:void(0)" onclick="logoutCustomer()" class="logout" style="color: #DC2626;"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
         </nav>
+
+        <!-- Help box in sidebar -->
+        <div style="margin-top: 24px; padding: 14px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 10px; font-size: 0.82rem; color: #166534;">
+          <div style="font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <i class="bi bi-whatsapp"></i> Need Help with Orders?
+          </div>
+          <div style="margin-bottom: 10px; color: #15803D;">Hamare master craftsmen aur customer support se WhatsApp par sidha baat karein.</div>
+          <a id="sidebarWaSupportBtn" href="https://wa.me/919772225296" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; background: #16A34A; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: 700;">
+            <i class="bi bi-whatsapp"></i> Chat on WhatsApp
+          </a>
+        </div>
       </aside>
 
-      <!-- MAIN CONTENT -->
+      <!-- MAIN CONTENT: ORDERS & TRACKING -->
       <main>
-        <!-- Admin Notification Banner -->
-        <div id="adminNoticeBanner" style="display: none; background: bisque; border: 1px solid gold; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; color: brown;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <div>
-              <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 4px;">🛡️ Administrator Mode Active</div>
-              <div style="font-size: 0.88rem; color: brown;">
-                Aap Administrator ke roop me logged in hain. Sabhi customers ke orders dekhne aur status (Crafting, Dispatched, Delivered) update karne ke liye Admin Orders Panel kholein.
-              </div>
-            </div>
-            <a href="../admin/manage-orders.html" class="btn btn-dark" style="background: darkslategray; color: white; padding: 8px 18px; font-size: 0.88rem; border-radius: 6px; text-decoration: none; font-weight: 700;">
-              📦 Manage All Orders in Admin Panel →
-            </a>
+        <!-- Filter and Search Toolbar -->
+        <div class="orders-toolbar">
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all" onclick="filterOrdersByStatus('all')">All Orders (<span id="countTabAll">0</span>)</button>
+            <button class="filter-tab" data-filter="active" onclick="filterOrdersByStatus('active')">In Progress (<span id="countTabActive">0</span>)</button>
+            <button class="filter-tab" data-filter="delivered" onclick="filterOrdersByStatus('delivered')">Delivered (<span id="countTabDelivered">0</span>)</button>
+            <button class="filter-tab" data-filter="cancelled" onclick="filterOrdersByStatus('cancelled')">Cancelled (<span id="countTabCancelled">0</span>)</button>
+          </div>
+
+          <div class="search-box">
+            <span class="search-icon"><i class="bi bi-search"></i></span>
+            <input type="text" id="orderSearchInput" placeholder="Search by Order ID or item..." oninput="handleOrderSearch(this.value)">
           </div>
         </div>
 
-        <div style="margin-bottom: 25px;">
-          <h2 style="font-family: var(--font-serif); font-size: 1.8rem; font-weight: 800; margin: 0 0 6px 0;">
-            My <span style="color: var(--primary-red);">Orders & Shipment Tracking</span>
-          </h2>
-          <p style="color: gray; margin: 0; font-size: 0.92rem;">Track real-time workshop crafting, safe packaging, and shipping status.</p>
-        </div>
-
+        <!-- Orders Container -->
         <div id="ordersContainer">
-          <div style="text-align: center; padding: 40px; color: gray; background: white; border-radius: 12px; border: 1px solid var(--border-light);">
-            ⏳ Loading your order history from database...
+          <div style="text-align: center; padding: 50px 20px; color: #6B685F; background: white; border-radius: 12px; border: 1px solid var(--border-light, #E0DDD4);">
+            <div style="font-size: 2.2rem; margin-bottom: 10px; color: #D6A419;"><i class="bi bi-hourglass-split"></i></div>
+            <div style="font-weight: 700;">Loading your order history from secure cloud database...</div>
           </div>
         </div>
 
-        <div id="noOrdersBox" style="display: none; text-align: center; padding: 60px 20px; background: white; border-radius: 16px; border: 1px solid var(--border-light);">
-          <div style="font-size: 3rem; margin-bottom: 12px;">📦</div>
-          <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 8px;">No Orders Placed Yet</h3>
-          <p style="color: gray; margin-bottom: 20px; font-size: 0.92rem;">Explore our Sheesham and Teak wood collection to place your first handcrafted order.</p>
-          <a href="../shop.html" class="btn btn-red" style="padding: 12px 28px; font-weight: 800;">Browse Store Catalog →</a>
+        <!-- Empty Orders Box -->
+        <div id="noOrdersBox" style="display: none; text-align: center; padding: 60px 20px; background: white; border-radius: 16px; border: 1px solid var(--border-light, #E0DDD4);">
+          <div style="font-size: 3.5rem; margin-bottom: 14px; color: #D6A419;"><i class="bi bi-box2"></i></div>
+          <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; color: #181715;">No Orders Found</h3>
+          <p style="color: #6B685F; margin-bottom: 22px; font-size: 0.94rem; max-width: 440px; margin-left: auto; margin-right: auto;">
+            Aapne abhi tak koi order place nahi kiya hai ya search query se koi order match nahi hua. Hamare Sheesham wood aur Aluminium collection ko explore karein!
+          </p>
+          <a href="../shop.html" class="btn btn-red" style="padding: 12px 28px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="bi bi-shop"></i> Explore Furniture Catalog →
+          </a>
         </div>
       </main>
+    </div>
+  </div>
+
+  <!-- ================= 4. AVATAR UPLOAD / EDIT MODAL ================= -->
+  <div class="rr-modal-backdrop" id="avatarModalBackdrop" onclick="closeAvatarModal(event)">
+    <div class="rr-modal-box" onclick="event.stopPropagation()">
+      <div class="rr-modal-header">
+        <h3><i class="bi bi-camera-fill" style="color: #D6A419;"></i> Add or Change Profile Photo</h3>
+        <button class="rr-modal-close" onclick="closeAvatarModal()">&times;</button>
+      </div>
+      <div class="rr-modal-body">
+        <div class="avatar-preview-container">
+          <div class="avatar-preview-circle" id="modalAvatarPreview">RR</div>
+          <div style="font-size: 0.85rem; color: #6B685F; font-weight: 600;">Preview Profile Photo</div>
+        </div>
+
+        <div style="margin-bottom: 20px; text-align: center;">
+          <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarFileSelect(this)">
+          <button type="button" class="btn-hero-action btn-hero-primary" onclick="document.getElementById('avatarFileInput').click()" style="padding: 11px 24px; font-size: 0.92rem; margin: 0 auto;">
+            <i class="bi bi-cloud-arrow-up-fill"></i> Select Photo from Device / Camera
+          </button>
+          <p style="font-size: 0.78rem; color: #8C8980; margin: 8px 0 0 0;">Supported: JPG, PNG, WEBP (Auto-cropped and optimized)</p>
+        </div>
+
+        <div style="border-top: 1px solid #EBE9E1; padding-top: 16px; margin-top: 16px;">
+          <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #565959; text-align: center; margin-bottom: 10px;">
+            Or Choose a Crafted Avatar Icon:
+          </label>
+          <div class="avatar-presets">
+            <button type="button" class="preset-btn" onclick="applyPresetAvatar('👑')" title="Royal Icon">👑</button>
+            <button type="button" class="preset-btn" onclick="applyPresetAvatar('🛋️')" title="Artisan Sofa">🛋️</button>
+            <button type="button" class="preset-btn" onclick="applyPresetAvatar('✨')" title="Luxury Sparkle">✨</button>
+            <button type="button" class="preset-btn" onclick="applyPresetAvatar('🌿')" title="Nature Sheesham">🌿</button>
+            <button type="button" class="preset-btn" onclick="applyPresetAvatar('🛠️')" title="Master Craftsman">🛠️</button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="button" id="saveAvatarBtn" class="btn-invoice-action btn-invoice-download" style="flex: 2; padding: 12px; font-size: 0.95rem; justify-content: center;" onclick="saveSelectedAvatar()">
+            <i class="bi bi-check2-circle" style="font-size: 1.1rem;"></i>
+            <span>Save Profile Photo</span>
+          </button>
+          <button type="button" class="btn-hero-action btn-hero-danger" style="flex: 1; padding: 12px; font-size: 0.88rem; justify-content: center;" onclick="removeProfilePhoto()">
+            <i class="bi bi-trash3-fill"></i>
+            <span>Remove</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 5. INTERACTIVE TRACKING MODAL (AMAZON STYLE) ================= -->
+  <div class="rr-modal-backdrop" id="trackingModalBackdrop" onclick="closeTrackingModal(event)">
+    <div class="rr-modal-box" onclick="event.stopPropagation()">
+      <div class="rr-modal-header">
+        <div>
+          <h3 id="trackModalOrderId"><i class="bi bi-truck" style="color: #067D62;"></i> Shipment Tracking</h3>
+          <div style="font-size: 0.8rem; color: #565959;" id="trackModalSubTitle">Radhey Radhey Express Furniture Logistics</div>
+        </div>
+        <button class="rr-modal-close" onclick="closeTrackingModal()">&times;</button>
+      </div>
+      <div class="rr-modal-body">
+        <div style="background: #F0F2F2; padding: 14px 18px; border-radius: 10px; border: 1px solid #D5D9D9; margin-bottom: 20px;">
+          <div style="font-size: 0.82rem; color: #565959; font-weight: 700; text-transform: uppercase;">Current Shipment Status</div>
+          <div style="font-size: 1.25rem; font-weight: 800; color: #067D62; margin-top: 2px;" id="trackModalCurrentStatus">Delivered</div>
+          <div style="font-size: 0.85rem; color: #333; margin-top: 4px;" id="trackModalDeliveryAddress">📍 Delivered to customer residence</div>
+        </div>
+
+        <div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 12px; color: #0F1111;">
+          Shipment Progress History:
+        </div>
+
+        <div class="tracking-timeline" id="trackModalTimeline">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <div style="margin-top: 24px; text-align: center;">
+          <a id="trackModalWhatsAppBtn" href="#" target="_blank" class="btn-invoice-action btn-invoice-download" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.92rem;">
+            <i class="bi bi-whatsapp"></i> Speak to Dispatch Team on WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 6. INVOICE / RECEIPT MODAL (PRINT & DOWNLOAD PDF) ================= -->
+  <div class="rr-modal-backdrop" id="invoiceModalBackdrop" onclick="closeInvoiceModal(event)">
+    <div class="rr-modal-box" style="max-width: 680px;" onclick="event.stopPropagation()">
+      <div class="rr-modal-header">
+        <h3><i class="bi bi-receipt" style="color: #D6A419;"></i> Order Receipt & Tax Invoice</h3>
+        <button class="rr-modal-close" onclick="closeInvoiceModal()">&times;</button>
+      </div>
+      <div class="rr-modal-body" id="invoicePrintArea" style="background: white; padding: 24px;">
+        <!-- Rendered dynamically -->
+      </div>
+      <!-- Fixed Visible Buttons with Download PDF & Print -->
+      <div class="invoice-modal-footer">
+        <button type="button" class="btn-invoice-action btn-invoice-close" onclick="closeInvoiceModal()">
+          <i class="bi bi-x-circle-fill"></i>
+          <span>Close</span>
+        </button>
+        <button type="button" class="btn-invoice-action btn-invoice-print" onclick="printInvoice()">
+          <i class="bi bi-printer-fill"></i>
+          <span>Print Invoice</span>
+        </button>
+        <button type="button" class="btn-invoice-action btn-invoice-download" id="downloadPdfBtn" onclick="downloadInvoicePDF()">
+          <i class="bi bi-file-earmark-arrow-down-fill"></i>
+          <span>Download Invoice (PDF)</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -234,26 +1386,66 @@
       window.location.href = '../login.html?redirect=' + encodeURIComponent(window.location.pathname);
     }
 
-    async function loadCustomerOrders() {
-      if (!user) return;
+    let customerOrdersCache = [];
+    let currentFilterStatus = 'all';
+    let tempAvatarData = null;
+    window._activeInvoiceOrder = null;
 
-      const role = (user.role || 'user').toLowerCase();
+    // Helper: Render Avatar into HTML elements
+    function renderAvatarElement(elem, u) {
+      if (!elem) return;
+      if (u && u.avatar && u.avatar.length > 15) {
+        elem.innerHTML = `<img src="${u.avatar}" alt="${u.name || 'User'}" onerror="this.parentElement.textContent='${(u.name || 'RR').slice(0,2).toUpperCase()}';">`;
+      } else {
+        const role = (u && u.role || 'user').toLowerCase();
+        const isAdminOrSuper = (role === 'admin' || role === 'superadmin');
+        elem.textContent = isAdminOrSuper ? (role === 'superadmin' ? '👑' : '🛡️') : ((u && u.name) ? u.name.slice(0, 2).toUpperCase() : 'RR');
+      }
+    }
+
+    // Load and Populate User Profile Header
+    function populateUserProfile(u) {
+      if (!u) return;
+      const role = (u.role || 'user').toLowerCase();
       const isAdminOrSuper = (role === 'admin' || role === 'superadmin');
 
-      // Setup user details in sidebar
-      if (user.name) {
-        document.getElementById('dashUserName').textContent = user.name;
-        document.getElementById('dashAvatar').textContent = isAdminOrSuper ? (role === 'superadmin' ? '👑' : '🛡️') : user.name.slice(0, 2).toUpperCase();
-        const hdr = document.getElementById('headerAccountName');
-        if (hdr) hdr.textContent = user.name.split(' ')[0];
-      }
-      if (user.email) {
-        document.getElementById('dashUserEmail').textContent = user.email + (isAdminOrSuper ? ` (${role.toUpperCase()})` : '');
-      } else if (user.phone) {
-        document.getElementById('dashUserEmail').textContent = '+91 ' + user.phone + (isAdminOrSuper ? ` (${role.toUpperCase()})` : '');
+      // 1. Name & Badges
+      const nameElem = document.getElementById('heroUserName');
+      if (nameElem) nameElem.textContent = u.name || 'Valued Customer';
+
+      const badgeElem = document.getElementById('heroUserBadge');
+      if (badgeElem) {
+        if (role === 'superadmin') {
+          badgeElem.innerHTML = '<i class="bi bi-award-fill" style="color: #B45309;"></i> Super Admin';
+          badgeElem.style.background = '#FEF3C7';
+          badgeElem.style.color = '#92400E';
+        } else if (role === 'admin') {
+          badgeElem.innerHTML = '<i class="bi bi-shield-fill-check" style="color: #3730A3;"></i> Store Admin';
+          badgeElem.style.background = '#E0E7FF';
+          badgeElem.style.color = '#3730A3';
+        } else {
+          badgeElem.innerHTML = '<i class="bi bi-patch-check-fill" style="color: #D6A419;"></i> Verified Customer';
+        }
       }
 
-      // If Admin or Super Admin, customize sidebar and show banner
+      // 2. Contact details
+      const phoneElem = document.getElementById('heroUserPhone');
+      if (phoneElem) phoneElem.textContent = u.phone ? '+91 ' + u.phone : 'Phone not set';
+
+      const emailElem = document.getElementById('heroUserEmail');
+      if (emailElem) emailElem.textContent = u.email || 'Email not registered';
+
+      const cityElem = document.getElementById('heroUserCity');
+      if (cityElem) cityElem.textContent = u.city || (u.address ? u.address.split(',').slice(-2).join(',') : 'Registered Member');
+
+      // 3. Avatar rendering
+      renderAvatarElement(document.getElementById('heroAvatar'), u);
+
+      // Header Account name update
+      const hdr = document.getElementById('headerAccountName');
+      if (hdr && u.name) hdr.textContent = u.name.split(' ')[0];
+
+      // Admin Mode banner & Sidebar
       if (isAdminOrSuper) {
         const banner = document.getElementById('adminNoticeBanner');
         if (banner) banner.style.display = 'block';
@@ -261,32 +1453,40 @@
         const menu = document.querySelector('.dash-menu');
         if (menu) {
           menu.innerHTML = `
-            <a href="../admin/dashboard.html" style="font-weight: 700; color: dodgerblue;">📊 Admin Dashboard</a>
-            <a href="../admin/manage-orders.html" style="font-weight: 700; color: dodgerblue;">📦 Manage All Orders</a>
-            <a href="../admin/manage-products.html" style="font-weight: 700;">🛋️ Manage Products</a>
-            <a href="../admin/site-settings.html" style="font-weight: 700;">⚙️ Website Settings</a>
-            <a href="dashboard.html" class="active">📦 My Personal Orders</a>
-            <a href="wishlist.html">❤️ My Saved Wishlist</a>
-            <a href="../index.html">🏠 Back to Store</a>
-            <a href="javascript:void(0)" onclick="logoutCustomer()" style="color: red;">🚪 Sign Out</a>
+            <a href="../admin/dashboard.html" style="font-weight: 700; color: #2563EB;"><i class="bi bi-speedometer2"></i> Admin Dashboard</a>
+            <a href="../admin/manage-orders.html" style="font-weight: 700; color: #2563EB;"><i class="bi bi-boxes"></i> Manage All Orders</a>
+            <a href="../admin/manage-products.html" style="font-weight: 700;"><i class="bi bi-grid-fill"></i> Manage Products</a>
+            <a href="../admin/site-settings.html" style="font-weight: 700;"><i class="bi bi-gear-fill"></i> Website Settings</a>
+            <a href="dashboard.html" class="active"><i class="bi bi-box-seam"></i> My Personal Orders</a>
+            <a href="wishlist.html"><i class="bi bi-heart-fill" style="color: #DC2626;"></i> My Saved Wishlist</a>
+            <a href="../index.html"><i class="bi bi-house-door-fill"></i> Back to Store</a>
+            <a href="javascript:void(0)" onclick="logoutCustomer()" class="logout" style="color: #DC2626;"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
           `;
         }
       }
+    }
+
+    // =========================================================
+    // LOAD ORDERS & FILTERING
+    // =========================================================
+    async function loadCustomerOrders() {
+      const curUser = getLoggedInCustomer();
+      if (!curUser) return;
+      populateUserProfile(curUser);
 
       const allOrders = await getCustomerOrdersFromDB();
 
       // Current user identifiers
-      const userEmail = (user.email || '').toLowerCase().trim();
-      let userPhone = (user.phone || '').toString().trim().replace(/[\s\-\+]/g, '');
+      const userEmail = (curUser.email || '').toLowerCase().trim();
+      let userPhone = (curUser.phone || '').toString().trim().replace(/[\s\-\+]/g, '');
       if (userPhone.startsWith('91') && userPhone.length === 12) userPhone = userPhone.slice(2);
       if (userPhone.startsWith('0') && userPhone.length === 11) userPhone = userPhone.slice(1);
       const userPhone10 = userPhone.length >= 10 ? userPhone.slice(-10) : '';
-      const userUid = (user.id || user.userId || user.uid || '').toString().toLowerCase().trim();
+      const userUid = (curUser.id || curUser.userId || curUser.uid || '').toString().toLowerCase().trim();
 
       // STRICT USER ISOLATION FILTER: Filter only current user's orders
-      const orders = (allOrders || []).filter(o => {
+      customerOrdersCache = (allOrders || []).filter(o => {
         if (!o) return false;
-        // Exclude dummy sample template orders
         if (o.orderId === 'RF-84920' || o.orderId === 'RF-84918') return false;
 
         const ordEmail = (o.email || o.customerEmail || '').toLowerCase().trim();
@@ -296,7 +1496,6 @@
         const ordPhone10 = ordPhone.length >= 10 ? ordPhone.slice(-10) : '';
         const ordUserId = (o.userId || o.userUid || '').toString().toLowerCase().trim();
 
-        // Strict checks: at least one unique credential must strictly match
         if (userUid && ordUserId && userUid === ordUserId) return true;
         if (userPhone10 && ordPhone10 && userPhone10 === ordPhone10) return true;
         if (userEmail && ordEmail && userEmail === ordEmail) return true;
@@ -306,6 +1505,90 @@
         return false;
       });
 
+      updateKpiCounts();
+      renderOrdersList(customerOrdersCache);
+    }
+
+    function updateKpiCounts() {
+      const total = customerOrdersCache.length;
+      let crafting = 0;
+      let dispatched = 0;
+      let delivered = 0;
+      let cancelled = 0;
+
+      customerOrdersCache.forEach(o => {
+        const s = (o.status || 'Confirmed').toLowerCase();
+        if (s.includes('delivered')) delivered++;
+        else if (s.includes('dispatched') || s.includes('shipped') || s.includes('out for delivery')) dispatched++;
+        else if (s.includes('crafting') || s.includes('workshop')) crafting++;
+        else if (s.includes('cancel')) cancelled++;
+        else crafting++;
+      });
+
+      document.getElementById('kpiTotalOrders').textContent = total;
+      document.getElementById('kpiCraftingOrders').textContent = crafting;
+      document.getElementById('kpiDispatchedOrders').textContent = dispatched;
+      document.getElementById('kpiDeliveredOrders').textContent = delivered;
+
+      document.getElementById('countTabAll').textContent = total;
+      document.getElementById('countTabActive').textContent = crafting + dispatched;
+      document.getElementById('countTabDelivered').textContent = delivered;
+      document.getElementById('countTabCancelled').textContent = cancelled;
+    }
+
+    function filterOrdersByStatus(statusKey) {
+      currentFilterStatus = statusKey;
+
+      document.querySelectorAll('.filter-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-filter') === statusKey);
+      });
+
+      let filtered = customerOrdersCache;
+      if (statusKey === 'active') {
+        filtered = customerOrdersCache.filter(o => {
+          const s = (o.status || 'Confirmed').toLowerCase();
+          return !s.includes('delivered') && !s.includes('cancel');
+        });
+      } else if (statusKey === 'delivered') {
+        filtered = customerOrdersCache.filter(o => (o.status || '').toLowerCase().includes('delivered'));
+      } else if (statusKey === 'cancelled') {
+        filtered = customerOrdersCache.filter(o => (o.status || '').toLowerCase().includes('cancel'));
+      } else if (statusKey === 'crafting') {
+        filtered = customerOrdersCache.filter(o => {
+          const s = (o.status || '').toLowerCase();
+          return s.includes('crafting') || s.includes('confirmed');
+        });
+      } else if (statusKey === 'dispatched') {
+        filtered = customerOrdersCache.filter(o => {
+          const s = (o.status || '').toLowerCase();
+          return s.includes('dispatched') || s.includes('shipped');
+        });
+      }
+
+      renderOrdersList(filtered);
+    }
+
+    function handleOrderSearch(query) {
+      const q = query.toLowerCase().trim();
+      if (!q) {
+        filterOrdersByStatus(currentFilterStatus);
+        return;
+      }
+
+      const searched = customerOrdersCache.filter(o => {
+        const orderId = String(o.orderId || '').toLowerCase();
+        const address = String(o.address || '').toLowerCase();
+        const hasItem = Array.isArray(o.items) && o.items.some(it => String(it.title || '').toLowerCase().includes(q));
+        return orderId.includes(q) || address.includes(q) || hasItem;
+      });
+
+      renderOrdersList(searched);
+    }
+
+    // =========================================================
+    // AMAZON-STYLE ORDER CARDS RENDERER
+    // =========================================================
+    function renderOrdersList(orders) {
       const container = document.getElementById('ordersContainer');
       const noOrders = document.getElementById('noOrdersBox');
 
@@ -317,78 +1600,626 @@
 
       noOrders.style.display = 'none';
       container.style.display = 'block';
+
       const activeSettings = (typeof getActiveStoreSettings === 'function') ? getActiveStoreSettings() : { whatsapp: '9772225296', brandName: 'Radhey Radhey Funicher' };
       const cleanWa = (activeSettings.whatsapp || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
       const brandName = activeSettings.brandName || 'Radhey Radhey Funicher';
 
-      container.innerHTML = orders.map(ord => {
-        const orderId = ord.orderId || ord._id;
+      container.innerHTML = orders.map((ord, idx) => {
+        const orderId = ord.orderId || ord._id || ('RF-' + (idx + 1000));
         const itemsList = Array.isArray(ord.items) ? ord.items : [];
-        const statusText = ord.status || 'Confirmed';
-        const lower = statusText.toLowerCase();
-        let badgeClass = 'confirmed';
-        if (lower.includes('crafting')) badgeClass = 'crafting';
-        else if (lower.includes('dispatched')) badgeClass = 'dispatched';
-        else if (lower.includes('cancelled')) badgeClass = 'cancelled';
+        const rawStatus = ord.status || 'Confirmed';
+        const lower = rawStatus.toLowerCase();
+
+        let stepIndex = 1;
+        let isCancelled = false;
+        let statusTitle = 'Order Confirmed';
+        let statusSubtitle = 'Your handcrafted furniture order has been received and scheduled.';
+        let statusClass = 'confirmed';
+
+        if (lower.includes('cancel')) {
+          isCancelled = true;
+          statusTitle = 'Order Cancelled';
+          statusSubtitle = 'This order was cancelled as requested.';
+          statusClass = 'cancelled';
+        } else if (lower.includes('delivered')) {
+          stepIndex = 5;
+          statusTitle = `Delivered ${ord.date || 'Recently'}`;
+          statusSubtitle = 'Package was safely delivered to your doorstep. Thank you for choosing Radhey Radhey!';
+          statusClass = 'delivered';
+        } else if (lower.includes('out for delivery')) {
+          stepIndex = 4;
+          statusTitle = 'Out for Delivery Today';
+          statusSubtitle = 'Local delivery partner is on the way with your furniture.';
+          statusClass = 'dispatched';
+        } else if (lower.includes('dispatched') || lower.includes('packed') || lower.includes('shipped')) {
+          stepIndex = 3;
+          statusTitle = 'Packed & Dispatched';
+          statusSubtitle = 'Safely packed in multi-layer protection and dispatched via express logistics.';
+          statusClass = 'dispatched';
+        } else if (lower.includes('crafting') || lower.includes('workshop')) {
+          stepIndex = 2;
+          statusTitle = 'Crafting in Workshop';
+          statusSubtitle = 'Master craftsmen are shaping Sheesham wood & precision aluminium frames.';
+          statusClass = 'crafting';
+        }
+
+        const progressPercent = isCancelled ? 100 : ((stepIndex - 1) / 4) * 100;
 
         return `
-        <div class="order-card">
-          <div class="order-header">
-            <div>
-              <span style="font-size: 0.82rem; color: gray;">Order ID:</span>
-              <strong style="color: var(--primary-red); font-size: 1.05rem; font-family: monospace; margin-left: 6px;">#${orderId}</strong>
-              <div style="font-size: 0.78rem; color: gray; margin-top: 3px;">📅 Placed on: ${ord.date || new Date().toLocaleDateString('en-IN')}</div>
+        <div class="amz-order-card" id="card-${orderId}">
+          <!-- Header Bar (Amazon Order Header) -->
+          <div class="amz-order-header">
+            <div class="amz-header-col-group">
+              <div class="amz-header-col">
+                <span class="label">Order Placed</span>
+                <span class="val">${ord.date || 'Recent'}</span>
+              </div>
+
+              <div class="amz-header-col">
+                <span class="label">Total</span>
+                <span class="val">${formatPrice(ord.totalAmount || 0)}</span>
+              </div>
+
+              <div class="amz-header-col">
+                <span class="label">Ship To</span>
+                <span class="val" title="${ord.address || 'Address on file'}" style="cursor: help;">
+                  ${ord.customerName || (user ? user.name : 'Customer')} ▾
+                </span>
+              </div>
             </div>
 
-            <div style="text-align: right;">
-              <span class="status-badge ${badgeClass}">
-                ● ${statusText}
-              </span>
-              <div style="font-weight: 800; font-size: 1.15rem; margin-top: 4px; color: black;">
-                ${formatPrice(ord.totalAmount)}
+            <div class="amz-header-actions">
+              <div class="amz-header-col" style="text-align: right;">
+                <span class="label">Order # ${orderId}</span>
+                <button type="button" class="amz-copy-btn" onclick="copyOrderId('${orderId}')">
+                  <i class="bi bi-copy"></i> Copy ID
+                </button>
               </div>
+
+              <button type="button" class="btn-amz-white" onclick='openInvoiceModal(${JSON.stringify(ord).replace(/'/g, "&apos;")})'>
+                <i class="bi bi-receipt"></i> View Invoice
+              </button>
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px;">
-            ${itemsList.map(it => {
-              let imgSrc = it.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80';
-              if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:') && !imgSrc.startsWith('../') && !imgSrc.startsWith('/')) {
-                imgSrc = '../' + imgSrc;
-              }
-              const qty = it.quantity || 1;
-              const unitPrice = it.price ? formatPrice(it.price) : '';
-              return `
-              <div style="display: flex; gap: 14px; align-items: center;">
-                <img src="${imgSrc}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid lightgray;" onerror="this.src='https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80'">
-                <div style="flex: 1;">
-                  <h4 style="font-size: 0.95rem; font-weight: 700; color: black; margin: 0 0 3px 0;">${it.title || 'Handcrafted Furniture'}</h4>
-                  <span style="font-size: 0.8rem; color: gray;">Finish: ${it.finish || 'Natural Finish'} | Qty: x${qty}</span>
+          <!-- Body with Amazon Delivery Status -->
+          <div class="amz-order-body">
+            <!-- Delivery Status Banner -->
+            <div class="amz-delivery-status-banner">
+              <div>
+                <h3 class="amz-delivery-title ${statusClass}">
+                  ${isCancelled ? '<i class="bi bi-x-circle-fill"></i>' : (stepIndex === 5 ? '<i class="bi bi-check-circle-fill"></i>' : (stepIndex >= 3 ? '<i class="bi bi-truck"></i>' : '<i class="bi bi-hammer"></i>'))}
+                  ${statusTitle}
+                </h3>
+                <p class="amz-delivery-sub">${statusSubtitle}</p>
+              </div>
+
+              <button type="button" class="btn-amz-yellow" onclick='openTrackingModal(${JSON.stringify(ord).replace(/'/g, "&apos;")})'>
+                <i class="bi bi-geo-alt-fill"></i> Track Package
+              </button>
+            </div>
+
+            <!-- Amazon 5-Step Visual Stepper -->
+            <div class="amz-stepper-wrap ${isCancelled ? 'cancelled' : ''}">
+              <div class="amz-stepper">
+                <div class="amz-stepper-line-bg"></div>
+                <div class="amz-stepper-line-fill" style="width: ${progressPercent}%;"></div>
+
+                <!-- Step 1: Confirmed -->
+                <div class="amz-step-item ${stepIndex >= 1 ? 'completed' : ''} ${stepIndex === 1 && !isCancelled ? 'active' : ''}">
+                  <div class="amz-step-dot">${stepIndex > 1 ? '✓' : '1'}</div>
+                  <div class="amz-step-label">Ordered</div>
                 </div>
-                <strong style="font-size: 0.95rem; color: black;">${formatPrice((it.price || 0) * qty)}</strong>
-              </div>
-              `;
-            }).join('')}
-          </div>
 
-          <div style="border-top: 1px solid var(--border-light); padding-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 0.85rem; color: gray;">
-            <div>
-              <strong>📍 Delivery Address:</strong> ${ord.address || 'Address registered on file'}
+                <!-- Step 2: Crafting -->
+                <div class="amz-step-item ${stepIndex >= 2 ? 'completed' : ''} ${stepIndex === 2 && !isCancelled ? 'active' : ''}">
+                  <div class="amz-step-dot">${stepIndex > 2 ? '✓' : '2'}</div>
+                  <div class="amz-step-label">Crafting</div>
+                </div>
+
+                <!-- Step 3: Dispatched -->
+                <div class="amz-step-item ${stepIndex >= 3 ? 'completed' : ''} ${stepIndex === 3 && !isCancelled ? 'active' : ''}">
+                  <div class="amz-step-dot">${stepIndex > 3 ? '✓' : '3'}</div>
+                  <div class="amz-step-label">Dispatched</div>
+                </div>
+
+                <!-- Step 4: Out for Delivery -->
+                <div class="amz-step-item ${stepIndex >= 4 ? 'completed' : ''} ${stepIndex === 4 && !isCancelled ? 'active' : ''}">
+                  <div class="amz-step-dot">${stepIndex > 4 ? '✓' : '4'}</div>
+                  <div class="amz-step-label">Out for Delivery</div>
+                </div>
+
+                <!-- Step 5: Delivered -->
+                <div class="amz-step-item ${stepIndex === 5 ? 'completed active' : ''}">
+                  <div class="amz-step-dot">${stepIndex === 5 ? '✓' : '5'}</div>
+                  <div class="amz-step-label">Delivered</div>
+                </div>
+              </div>
             </div>
-            <a href="https://wa.me/91${cleanWa}?text=Hello%20${encodeURIComponent(brandName)},%20please%20give%20me%20update%20on%20Order%20%23${orderId}" style="color: green; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; background: honeydew; padding: 6px 12px; border-radius: 6px; border: 1px solid lightgreen;">
-              💬 WhatsApp Tracking Updates →
-            </a>
+
+            <!-- Ordered Items List -->
+            <div class="amz-items-container">
+              ${itemsList.map(it => {
+                let imgSrc = it.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80';
+                if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:') && !imgSrc.startsWith('../') && !imgSrc.startsWith('/')) {
+                  imgSrc = '../' + imgSrc;
+                }
+                const qty = it.quantity || 1;
+                const unitPrice = it.price || 0;
+                const itemTotal = unitPrice * qty;
+                const prodLink = it.id ? `../product-details.html?id=${it.id}` : '../shop.html';
+
+                return `
+                <div class="amz-item-card">
+                  <a href="${prodLink}">
+                    <img src="${imgSrc}" class="amz-item-img" alt="${it.title || 'Furniture'}" onerror="this.src='https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80'">
+                  </a>
+
+                  <div class="amz-item-info">
+                    <a href="${prodLink}" class="amz-item-title">${it.title || 'Handcrafted Solid Wood Furniture'}</a>
+                    <div class="amz-item-meta">
+                      <span>Finish: <strong>${it.finish || 'Natural Teak'}</strong></span>
+                      <span>Qty: <strong>x${qty}</strong></span>
+                      <span>Unit: ${formatPrice(unitPrice)}</span>
+                    </div>
+                    <div class="amz-item-price">${formatPrice(itemTotal)}</div>
+                  </div>
+
+                  <div class="amz-item-actions">
+                    <button type="button" class="btn-amz-yellow" onclick='reorderItem(${JSON.stringify(it).replace(/'/g, "&apos;")})'>
+                      <i class="bi bi-arrow-repeat"></i> Buy it again
+                    </button>
+                    <a href="${prodLink}" class="btn-amz-white">
+                      View item
+                    </a>
+                  </div>
+                </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Card Bottom Address & WhatsApp Contact -->
+            <div class="amz-order-footer">
+              <div>
+                <strong>📍 Delivery Address:</strong> ${ord.address || 'Address registered on user file'}
+              </div>
+
+              <a href="https://wa.me/91${cleanWa}?text=Namaste%20${encodeURIComponent(brandName)},%20I%20need%20tracking%20update%20for%20Order%20%23${orderId}" target="_blank" style="color: #067D62; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                <i class="bi bi-whatsapp"></i> WhatsApp Support Updates →
+              </a>
+            </div>
           </div>
         </div>
         `;
       }).join('');
     }
 
+    // Helper: Copy Order ID to Clipboard
+    function copyOrderId(id) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(id);
+        showToast(`Order ID #${id} copied to clipboard!`, 'success');
+      } else {
+        showToast(`Order ID #${id}`, 'info');
+      }
+    }
+
+    // Helper: Buy It Again (Reorder)
+    function reorderItem(item) {
+      if (!item) return;
+      addToCart({
+        id: item.id || Date.now(),
+        title: item.title,
+        price: item.price,
+        image: item.image,
+        finish: item.finish || 'Natural Finish',
+        quantity: 1
+      });
+      showToast(`Added "${item.title}" to cart! Redirecting to cart...`, 'success');
+      setTimeout(() => {
+        window.location.href = '../cart.html';
+      }, 1200);
+    }
+
+    // =========================================================
+    // MODAL: INTERACTIVE TRACKING TIMELINE
+    // =========================================================
+    function openTrackingModal(ord) {
+      if (!ord) return;
+      const modal = document.getElementById('trackingModalBackdrop');
+      const orderId = ord.orderId || ord._id || 'RF-0000';
+      const rawStatus = ord.status || 'Confirmed';
+      const lower = rawStatus.toLowerCase();
+
+      document.getElementById('trackModalOrderId').innerHTML = `<i class="bi bi-truck" style="color: #067D62;"></i> Tracking #${orderId}`;
+      document.getElementById('trackModalDeliveryAddress').textContent = `📍 Delivery Address: ${ord.address || 'Customer residence'}`;
+
+      const activeSettings = (typeof getActiveStoreSettings === 'function') ? getActiveStoreSettings() : { whatsapp: '9772225296', brandName: 'Radhey Radhey Funicher' };
+      const cleanWa = (activeSettings.whatsapp || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
+      document.getElementById('trackModalWhatsAppBtn').href = `https://wa.me/91${cleanWa}?text=Hello,%20please%20update%20me%20on%20my%20order%20%23${orderId}`;
+
+      const statusElem = document.getElementById('trackModalCurrentStatus');
+      statusElem.textContent = rawStatus;
+
+      const timelineBox = document.getElementById('trackModalTimeline');
+      let checkpoints = [];
+
+      checkpoints.push({
+        title: 'Order Confirmed & Payment Verified',
+        desc: 'Your handcrafted order was logged and confirmed by Radhey Radhey Furniture.',
+        time: ord.date ? `${ord.date} - 10:30 AM` : 'Day 1',
+        completed: true
+      });
+
+      if (lower.includes('cancel')) {
+        checkpoints.push({
+          title: 'Order Cancelled',
+          desc: 'This order was cancelled. Any advance refunds are initiated to original method.',
+          time: 'Cancelled',
+          completed: true,
+          isCancelled: true
+        });
+      } else {
+        const isCrafting = lower.includes('crafting') || lower.includes('dispatched') || lower.includes('delivered') || lower.includes('out for delivery');
+        checkpoints.push({
+          title: 'Crafting in Workshop & Joinery',
+          desc: 'Seasoned Sheesham/Teak wood cutting, aluminium fabrication, and precision sanding.',
+          time: isCrafting ? 'Workshop Stage Completed' : 'In Progress',
+          completed: isCrafting
+        });
+
+        const isDispatched = lower.includes('dispatched') || lower.includes('delivered') || lower.includes('out for delivery');
+        checkpoints.push({
+          title: 'Protective Packaging & Dispatched',
+          desc: 'Multi-layer bubble wrap & edge-cushioning applied. Dispatched with furniture logistics vehicle.',
+          time: isDispatched ? 'Dispatched via Express Transit' : 'Scheduled Soon',
+          completed: isDispatched
+        });
+
+        const isOut = lower.includes('out for delivery') || lower.includes('delivered');
+        checkpoints.push({
+          title: 'Out for Delivery to Your Doorstep',
+          desc: 'Local delivery partner is transporting your furniture for safe room-of-choice placement.',
+          time: isOut ? 'Out for Delivery' : 'Upcoming',
+          completed: isOut
+        });
+
+        const isDelivered = lower.includes('delivered');
+        checkpoints.push({
+          title: 'Successfully Delivered & Verified',
+          desc: 'Package handed over in excellent handcrafted condition. Welcome to the Radhey Radhey family!',
+          time: isDelivered ? (ord.date || 'Delivered') : 'Pending Final Delivery',
+          completed: isDelivered
+        });
+      }
+
+      timelineBox.innerHTML = checkpoints.map(cp => `
+        <div class="timeline-node ${cp.completed ? '' : 'future'}">
+          <h5>${cp.title}</h5>
+          <p>${cp.desc}</p>
+          <div class="node-time">${cp.time}</div>
+        </div>
+      `).join('');
+
+      modal.style.display = 'flex';
+    }
+
+    function closeTrackingModal(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('rr-modal-close')) return;
+      document.getElementById('trackingModalBackdrop').style.display = 'none';
+    }
+
+    // =========================================================
+    // MODAL: TAX INVOICE & RECEIPT (PRINT & PDF DOWNLOAD)
+    // =========================================================
+    function openInvoiceModal(ord) {
+      if (!ord) return;
+      window._activeInvoiceOrder = ord;
+      const modal = document.getElementById('invoiceModalBackdrop');
+      const printArea = document.getElementById('invoicePrintArea');
+      const orderId = ord.orderId || ord._id || 'RF-0000';
+      const itemsList = Array.isArray(ord.items) ? ord.items : [];
+
+      printArea.innerHTML = `
+        <div style="border-bottom: 2px solid #21201D; padding-bottom: 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: #21201D;">RADHEY RADHEY FURNITURE</h2>
+            <div style="font-size: 0.8rem; color: #565959; margin-top: 2px;">Handicraft, Wood & Aluminium Masters</div>
+            <div style="font-size: 0.78rem; color: #565959;">WhatsApp: +91 9772225296 | Website: Radhey Radhey Furniture</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-weight: 800; font-size: 1.15rem; color: #0F1111;">INVOICE SLIP</div>
+            <div style="font-size: 0.82rem; color: #565959;">Order #: <strong style="color: #21201D;">#${orderId}</strong></div>
+            <div style="font-size: 0.82rem; color: #565959;">Date: ${ord.date || 'Today'}</div>
+          </div>
+        </div>
+
+        <div style="background: #FAFAF9; padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; border: 1px solid #EBE9E1;">
+          <div style="margin-bottom: 3px;"><strong>Customer Name:</strong> ${ord.customerName || (user ? user.name : 'Customer')}</div>
+          <div style="margin-bottom: 3px;"><strong>Contact Phone:</strong> +91 ${ord.phone || (user ? user.phone : 'N/A')}</div>
+          <div style="margin-bottom: 3px;"><strong>Delivery Address:</strong> ${ord.address || 'Registered Address'}</div>
+          <div><strong>Payment Mode:</strong> ${ord.paymentMode || 'COD / Online'} | Status: <strong style="color: #067D62;">${ord.status || 'Confirmed'}</strong></div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.86rem; margin-bottom: 16px;">
+          <thead>
+            <tr style="background: #F0F2F2; text-align: left;">
+              <th style="padding: 9px 10px; border-bottom: 1px solid #D5D9D9; color: #21201D;">Item Description</th>
+              <th style="padding: 9px 10px; border-bottom: 1px solid #D5D9D9; text-align: center; color: #21201D;">Qty</th>
+              <th style="padding: 9px 10px; border-bottom: 1px solid #D5D9D9; text-align: right; color: #21201D;">Unit Price</th>
+              <th style="padding: 9px 10px; border-bottom: 1px solid #D5D9D9; text-align: right; color: #21201D;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsList.map(it => {
+              const qty = it.quantity || 1;
+              const unit = it.price || 0;
+              return `
+              <tr>
+                <td style="padding: 9px 10px; border-bottom: 1px solid #EBE9E1;">
+                  <strong style="color: #21201D;">${it.title}</strong>
+                  <div style="font-size: 0.76rem; color: #565959;">Finish: ${it.finish || 'Standard'}</div>
+                </td>
+                <td style="padding: 9px 10px; border-bottom: 1px solid #EBE9E1; text-align: center; font-weight: 700;">x${qty}</td>
+                <td style="padding: 9px 10px; border-bottom: 1px solid #EBE9E1; text-align: right;">${formatPrice(unit)}</td>
+                <td style="padding: 9px 10px; border-bottom: 1px solid #EBE9E1; text-align: right; font-weight: 800; color: #21201D;">${formatPrice(unit * qty)}</td>
+              </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div style="border-top: 1px solid #D5D9D9; padding-top: 10px; display: flex; justify-content: flex-end; font-size: 0.95rem;">
+          <div style="width: 250px; text-align: right;">
+            <div style="margin-bottom: 4px; color: #565959;">Subtotal: <strong>${formatPrice(ord.subtotal || ord.totalAmount || 0)}</strong></div>
+            ${ord.discountAmount ? `<div style="margin-bottom: 4px; color: #16A34A; font-weight: 700;">Discount: -${formatPrice(ord.discountAmount)}</div>` : ''}
+            <div style="font-size: 1.15rem; font-weight: 800; color: #0F1111; border-top: 2px solid #21201D; padding-top: 6px; margin-top: 4px;">
+              Grand Total: ${formatPrice(ord.totalAmount || 0)}
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 24px; font-size: 0.78rem; color: #8C8980; border-top: 1px dashed #D5D9D9; padding-top: 12px;">
+          * This is a computer generated digital invoice slip for Radhey Radhey Furniture & Handicraft.
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+    }
+
+    function closeInvoiceModal(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('rr-modal-close')) return;
+      document.getElementById('invoiceModalBackdrop').style.display = 'none';
+    }
+
+    // Dedicated Print Invoice Function
+    function printInvoice() {
+      const content = document.getElementById('invoicePrintArea').innerHTML;
+      const printWin = window.open('', '_blank', 'width=800,height=900');
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Print Invoice - Radhey Radhey Furniture</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #21201D; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 13px; }
+            th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
+            th { background: #f0f2f2; text-align: left; }
+            @media print {
+              body { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          ${content}
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+      printWin.focus();
+      setTimeout(() => {
+        printWin.print();
+        printWin.close();
+      }, 400);
+    }
+
+    // Download Invoice as PDF Function
+    function downloadInvoicePDF() {
+      const element = document.getElementById('invoicePrintArea');
+      const btn = document.getElementById('downloadPdfBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Generating PDF...</span>';
+
+      const ord = window._activeInvoiceOrder || {};
+      const orderId = ord.orderId || ord._id || 'Order';
+
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `Radhey-Radhey-Invoice-${orderId}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      if (window.html2pdf) {
+        html2pdf().set(opt).from(element).save().then(() => {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          showToast(`Invoice #${orderId} PDF downloaded successfully!`, 'success');
+        }).catch(err => {
+          console.warn('html2pdf generation error, using fallback:', err);
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          fallbackDownloadInvoiceHTML(orderId, element.innerHTML);
+        });
+      } else {
+        fallbackDownloadInvoiceHTML(orderId, element.innerHTML);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    // Fallback: Download HTML formatted receipt slip
+    function fallbackDownloadInvoiceHTML(orderId, content) {
+      try {
+        const fullHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice #${orderId} - Radhey Radhey Furniture</title><style>body { font-family: sans-serif; padding: 25px; color: #21201D; } table { width: 100%; border-collapse: collapse; margin: 15px 0; } th, td { padding: 8px 10px; border-bottom: 1px solid #ddd; } th { background: #f0f2f2; text-align: left; }</style></head><body>${content}</body></html>`;
+        const blob = new Blob([fullHTML], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Radhey-Radhey-Invoice-${orderId}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast(`Invoice #${orderId} downloaded!`, 'success');
+      } catch(e) {
+        printInvoice();
+      }
+    }
+
+    // =========================================================
+    // MODAL: USER AVATAR ADD & EDIT WITH IMAGE COMPRESSION
+    // =========================================================
+    function openAvatarModal() {
+      const curUser = getLoggedInCustomer();
+      tempAvatarData = curUser ? (curUser.avatar || null) : null;
+      const preview = document.getElementById('modalAvatarPreview');
+
+      if (curUser) {
+        renderAvatarElement(preview, curUser);
+      }
+
+      document.getElementById('avatarModalBackdrop').style.display = 'flex';
+    }
+
+    function closeAvatarModal(e) {
+      if (e && e.target !== e.currentTarget && !e.target.classList.contains('rr-modal-close')) return;
+      document.getElementById('avatarModalBackdrop').style.display = 'none';
+    }
+
+    // Select and compress image file
+    function handleAvatarFileSelect(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file (JPG, PNG, WEBP)', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const size = 250;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+
+          let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
+          if (img.width > img.height) {
+            srcW = img.height;
+            srcX = (img.width - img.height) / 2;
+          } else if (img.height > img.width) {
+            srcH = img.width;
+            srcY = (img.height - img.width) / 2;
+          }
+
+          ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, size, size);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+          tempAvatarData = compressedDataUrl;
+          const preview = document.getElementById('modalAvatarPreview');
+          preview.innerHTML = `<img src="${compressedDataUrl}" alt="Avatar Preview">`;
+          showToast('Image loaded! Click "Save Profile Photo" to apply.', 'info');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Apply Preset Icon Avatar
+    function applyPresetAvatar(emojiIcon) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 200;
+      canvas.height = 200;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, 200, 200);
+      grad.addColorStop(0, '#2B2927');
+      grad.addColorStop(1, '#181715');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 200, 200);
+
+      ctx.font = '90px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(emojiIcon, 100, 108);
+
+      tempAvatarData = canvas.toDataURL('image/jpeg', 0.9);
+      const preview = document.getElementById('modalAvatarPreview');
+      preview.innerHTML = `<img src="${tempAvatarData}" alt="Preset Avatar">`;
+      showToast(`Selected ${emojiIcon} avatar preset!`, 'info');
+    }
+
+    // Save Selected Avatar to User Profile & Database
+    async function saveSelectedAvatar() {
+      const saveBtn = document.getElementById('saveAvatarBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Saving Photo...</span>';
+
+      try {
+        const curUser = getLoggedInCustomer();
+        if (!curUser) throw new Error('Not logged in');
+
+        await updateCustomerProfileInDB({
+          avatar: tempAvatarData || ''
+        });
+
+        const updatedUser = getLoggedInCustomer();
+        populateUserProfile(updatedUser);
+
+        showToast('Profile photo updated successfully!', 'success');
+        document.getElementById('avatarModalBackdrop').style.display = 'none';
+      } catch (err) {
+        console.error('Error saving avatar:', err);
+        showToast('Failed to save avatar photo. Please try again.', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check2-circle"></i> <span>Save Profile Photo</span>';
+      }
+    }
+
+    // Remove Profile Photo
+    async function removeProfilePhoto() {
+      if (!confirm('Are you sure you want to remove your profile photo and revert to initials?')) return;
+      try {
+        await updateCustomerProfileInDB({ avatar: '' });
+        const updatedUser = getLoggedInCustomer();
+        populateUserProfile(updatedUser);
+        const preview = document.getElementById('modalAvatarPreview');
+        renderAvatarElement(preview, updatedUser);
+        showToast('Profile photo removed.', 'info');
+        document.getElementById('avatarModalBackdrop').style.display = 'none';
+      } catch (e) {
+        showToast('Failed to remove photo.', 'error');
+      }
+    }
+
+    // =========================================================
+    // INITIALIZATION & REAL-TIME LISTENERS
+    // =========================================================
     document.addEventListener('DOMContentLoaded', async () => {
       await loadCustomerOrders();
     });
 
-    window.addEventListener('radha_profile_synced', async () => {
+    window.addEventListener('radha_profile_synced', async (e) => {
+      if (e.detail) {
+        populateUserProfile(e.detail);
+      }
       await loadCustomerOrders();
     });
   </script>

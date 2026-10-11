@@ -1059,20 +1059,68 @@ function updateHeaderAuthState() {
   const userPrefix = isInUserFolder ? '' : (isInAdminFolder || isInAlumFolder ? '../user/' : 'user/');
   const adminPrefix = isInAdminFolder ? '' : (isInUserFolder || isInAlumFolder ? '../admin/' : 'admin/');
 
+  // 0. Auto-ensure all header action buttons have proper icons
+  document.querySelectorAll('.header-actions .action-btn, .navbar .header-actions .action-btn').forEach(btn => {
+    if (!btn.querySelector('i') && !btn.querySelector('img')) {
+      const href = (btn.getAttribute('href') || '').toLowerCase();
+      const text = (btn.textContent || '').toLowerCase();
+      const i = document.createElement('i');
+      if (href.includes('shop') || text.includes('shop') || text.includes('catalog')) i.className = 'bi bi-grid';
+      else if (href.includes('wishlist') || text.includes('wishlist')) i.className = 'bi bi-heart';
+      else if (href.includes('cart') || text.includes('cart')) i.className = 'bi bi-cart3';
+      else i.className = 'bi bi-person';
+      btn.insertBefore(i, btn.firstChild);
+    }
+  });
+
   // 1. Account Button in header
   const accountLinks = document.querySelectorAll('a[title="My Account"], a.action-btn[href*="dashboard.html"], a.action-btn[href*="login.html"]');
   accountLinks.forEach(link => {
-    const textSpan = link.querySelector('span:not(.badge-count)');
+    let textSpan = link.querySelector('span:not(.badge-count)');
+    let iconElem = link.querySelector('i, .header-avatar-thumb');
+
     if (user) {
       const role = (user.role || 'user').toLowerCase();
+      // Manage avatar image / icon on top
+      if (user.avatar && user.avatar.length > 15) {
+        if (!link.querySelector('.header-avatar-thumb')) {
+          const img = document.createElement('img');
+          img.className = 'header-avatar-thumb';
+          img.src = user.avatar;
+          img.alt = 'Avatar';
+          img.style.cssText = 'width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent-gold); display: block; margin: 0 auto 2px;';
+          if (iconElem) {
+            link.replaceChild(img, iconElem);
+          } else {
+            link.insertBefore(img, link.firstChild);
+          }
+        } else {
+          link.querySelector('.header-avatar-thumb').src = user.avatar;
+        }
+      } else {
+        const existingImg = link.querySelector('.header-avatar-thumb');
+        const iconClass = (role === 'superadmin') ? 'bi bi-award-fill' : (role === 'admin' ? 'bi bi-shield-fill-check' : 'bi bi-person-fill');
+        if (existingImg) {
+          const i = document.createElement('i');
+          i.className = iconClass;
+          link.replaceChild(i, existingImg);
+        } else if (!iconElem) {
+          const i = document.createElement('i');
+          i.className = iconClass;
+          link.insertBefore(i, link.firstChild);
+        } else {
+          iconElem.className = iconClass;
+        }
+      }
+
       if (role === 'superadmin') {
         link.href = adminPrefix + 'dashboard.html';
         link.title = `Super Admin (${user.name || 'Owner'})`;
-        if (textSpan) textSpan.textContent = '👑 Super Admin';
+        if (textSpan) textSpan.textContent = 'Super Admin';
       } else if (role === 'admin') {
         link.href = adminPrefix + 'dashboard.html';
         link.title = `Store Admin (${user.name || 'Admin'})`;
-        if (textSpan) textSpan.textContent = '🛡️ Admin';
+        if (textSpan) textSpan.textContent = 'Admin';
       } else {
         link.href = userPrefix + 'dashboard.html';
         link.title = `My Account (${user.name || 'Customer'})`;
@@ -1084,6 +1132,18 @@ function updateHeaderAuthState() {
     } else {
       link.href = rootPrefix + 'login.html';
       link.title = 'Sign In / Register';
+      const existingImg = link.querySelector('.header-avatar-thumb');
+      if (existingImg) {
+        const i = document.createElement('i');
+        i.className = 'bi bi-person';
+        link.replaceChild(i, existingImg);
+      } else if (!iconElem) {
+        const i = document.createElement('i');
+        i.className = 'bi bi-person';
+        link.insertBefore(i, link.firstChild);
+      } else {
+        iconElem.className = 'bi bi-person';
+      }
       if (textSpan) {
         textSpan.textContent = 'Sign In';
       }
@@ -1545,9 +1605,15 @@ async function updateCustomerProfileInDB(updatedData) {
   const contact = (user && (user.email || user.phone)) || updatedData.email || updatedData.phone;
   window.__lastLocalProfileSaveTime = Date.now();
 
+  const userId = (user && (user.id || user.userId || user.uid)) || updatedData.id || updatedData.userId;
+  if (userId) {
+    updatedData.id = userId;
+    updatedData.userId = userId;
+  }
+
   let res = { success: true };
-  if (typeof fbUpdateUserProfile === 'function' && contact) {
-    res = await fbUpdateUserProfile(contact, updatedData);
+  if (typeof fbUpdateUserProfile === 'function') {
+    res = await fbUpdateUserProfile(contact, updatedData, user);
   }
 
   // Update session immediately on local device
@@ -1808,6 +1874,7 @@ function applyCloudProfileUpdate(cloudUser) {
     email: cloudUser.email !== undefined ? cloudUser.email : (current.email || ''),
     city: cloudUser.city !== undefined ? cloudUser.city : (current.city || ''),
     address: cloudUser.address !== undefined ? cloudUser.address : (current.address || ''),
+    avatar: cloudUser.avatar !== undefined ? cloudUser.avatar : (current.avatar || ''),
     role: cloudUser.role || current.role || 'user'
   };
 

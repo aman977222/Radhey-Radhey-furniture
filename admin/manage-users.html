@@ -197,8 +197,8 @@
           <tr>
             <td>
               <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 34px; height: 34px; border-radius: 50%; background: ${isStaff ? 'mistyrose' : 'whitesmoke'}; color: ${isStaff ? 'red' : 'slategray'}; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.82rem;">
-                  ${isStaff ? '🛡️' : initial}
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: ${isStaff ? 'mistyrose' : 'whitesmoke'}; color: ${isStaff ? 'red' : 'slategray'}; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.82rem; overflow: hidden; border: 1.5px solid #D6A419;">
+                  ${(u.avatar && u.avatar.length > 15) ? `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">` : (isStaff ? '🛡️' : initial)}
                 </div>
                 <div>
                   <strong style="color: black; display: block;">${name}</strong>
