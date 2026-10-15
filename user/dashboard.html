@@ -1920,13 +1920,15 @@
       const printArea = document.getElementById('invoicePrintArea');
       const orderId = ord.orderId || ord._id || 'RF-0000';
       const itemsList = Array.isArray(ord.items) ? ord.items : [];
+      const invoiceSettings = (typeof getActiveStoreSettings === 'function') ? getActiveStoreSettings() : { whatsapp: '9772225296' };
+      const invoiceWa = (invoiceSettings.whatsapp || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
 
       printArea.innerHTML = `
         <div style="border-bottom: 2px solid #21201D; padding-bottom: 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
           <div>
             <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: #21201D;">RADHEY RADHEY FURNITURE</h2>
             <div style="font-size: 0.8rem; color: #565959; margin-top: 2px;">Handicraft, Wood & Aluminium Masters</div>
-            <div style="font-size: 0.78rem; color: #565959;">WhatsApp: +91 9772225296 | Website: Radhey Radhey Furniture</div>
+            <div style="font-size: 0.78rem; color: #565959;">WhatsApp: +91 ${invoiceWa} | Website: Radhey Radhey Furniture</div>
           </div>
           <div style="text-align: right;">
             <div style="font-weight: 800; font-size: 1.15rem; color: #0F1111;">INVOICE SLIP</div>

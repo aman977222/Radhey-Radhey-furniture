@@ -502,7 +502,7 @@ function resolveStoreImg(src, category = '') {
 // ---------------------------------------------------------------
 function getActiveStoreSettings() {
   const fallback = (typeof DEFAULT_SITE_SETTINGS !== 'undefined') ? DEFAULT_SITE_SETTINGS : {
-    brandName: 'Radhey Radhey Funicher',
+    brandName: 'Radhey Radhey Furniture & Handicraft',
     phone: '9772225296',
     whatsapp: '9772225296',
     email: 'jangid7090@gmail.com',
@@ -1204,7 +1204,6 @@ async function applySiteSettingsToPage(customSettings = null) {
   function applyDOM(settings) {
     if (!settings) return;
 
-    const brandName = settings.brandName || 'Radhey Radhey Funicher';
     const address = settings.address || 'Radhey Radhey Funicher, Mansarovar, Jaipur, Rajasthan 302020';
     const email = settings.email || 'jangid7090@gmail.com';
     const cleanPhone = (settings.phone || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
@@ -1212,15 +1211,55 @@ async function applySiteSettingsToPage(customSettings = null) {
     const bannerText = settings.bannerText || '🔴 UPTO 40% OFF Festive Discount on Solid Sheesham & Teak Wood';
     const fullWa = '91' + cleanWa;
 
-    // 1. Update announcement banner marquee text
+    // 1. TOP ANNOUNCEMENT BAR MARQUEE TEXT (Across ALL pages: Home, Shop, Contact, About, Category, PDP, Aluminium, etc.)
     if (bannerText) {
-      const bannerSpans = document.querySelectorAll('.top-announcement-bar .marquee-content span, .top-announcement-bar span, [data-setting="bannerText"]');
-      bannerSpans.forEach(span => {
-        span.textContent = bannerText;
+      const topBarLefts = document.querySelectorAll('.top-bar-left, .top-bar .top-bar-left, .top-announcement-bar, [data-setting="bannerText"]');
+      topBarLefts.forEach(container => {
+        const existingTag = container.querySelector('.tag');
+        if (existingTag) {
+          container.innerHTML = `<span><span class="tag">${existingTag.textContent.trim()}</span> ${bannerText}</span>`;
+        } else {
+          container.innerHTML = `<span>${bannerText}</span>`;
+        }
       });
     }
 
-    // 2. Update WhatsApp buttons and links across whole page
+    // 2. PRIMARY SUPPORT PHONE / CALLING (Across ALL pages)
+    const telLinks = document.querySelectorAll('a[href^="tel:"]');
+    telLinks.forEach(a => {
+      a.href = 'tel:+91' + cleanPhone;
+      const icon = a.querySelector('i, svg');
+      const iconHtml = icon ? `${icon.outerHTML} ` : '';
+      if (a.closest('.top-bar-right')) {
+        a.innerHTML = `${iconHtml}Call / Support: +91 ${cleanPhone}`;
+      } else if (a.closest('.info-card')) {
+        a.textContent = `+91 ${cleanPhone}`;
+      } else if (a.textContent.includes('Call')) {
+        a.innerHTML = `${iconHtml}Call: +91 ${cleanPhone}`;
+      } else {
+        a.textContent = `+91 ${cleanPhone}`;
+      }
+    });
+
+    // Footer contact list items for phone
+    document.querySelectorAll('.footer-contact li, .site-footer li').forEach(li => {
+      if (li.querySelector('.bi-telephone, .bi-telephone-fill, svg.bi-telephone') || li.innerHTML.includes('bi-telephone')) {
+        const span = li.querySelector('span');
+        if (span) {
+          span.textContent = `+91 ${cleanPhone} (10 AM - 8 PM)`;
+        }
+      }
+    });
+
+    document.querySelectorAll('[data-store-phone], [data-setting="phone"]').forEach(el => {
+      if (el.tagName === 'A') {
+        el.href = `tel:+91${cleanPhone}`;
+      } else {
+        el.textContent = `+91 ${cleanPhone}`;
+      }
+    });
+
+    // 3. SUPPORT WHATSAPP NUMBER (Across ALL pages)
     const waLinks = document.querySelectorAll('a[href*="wa.me"], a.whatsapp-float, a.floating-whatsapp, a.pdp-whatsapp-btn, #modalWaDirectBtn, #whatsappOrderBtn, #chatCustomerBtn');
     waLinks.forEach(a => {
       const href = a.getAttribute('href') || '';
@@ -1242,66 +1281,29 @@ async function applySiteSettingsToPage(customSettings = null) {
       }
     });
 
-    // 3. Update telephone links and phone text
-    const telLinks = document.querySelectorAll('a[href^="tel:"]');
-    telLinks.forEach(a => {
-      a.href = 'tel:+91' + cleanPhone;
-      const icon = a.querySelector('i');
-      if (icon) {
-        a.innerHTML = `${icon.outerHTML} Call / Support: +91 ${cleanPhone}`;
-      } else if (a.textContent.trim().startsWith('+91') || a.textContent.includes('Call')) {
-        a.textContent = `+91 ${cleanPhone}`;
-      }
-    });
-
-    // Footer contact list items for phone
-    document.querySelectorAll('.footer-contact i.bi-telephone, .footer-contact svg.bi-telephone').forEach(icon => {
-      const span = icon.closest('li')?.querySelector('span') || icon.nextElementSibling;
-      if (span && span.tagName === 'SPAN') {
-        span.textContent = `+91 ${cleanPhone} (10 AM - 8 PM)`;
-      }
-    });
-
-    // Contact page info-card phone
-    document.querySelectorAll('.info-card').forEach(card => {
-      if (card.innerHTML.includes('📞') || card.innerHTML.includes('Direct Call') || card.innerHTML.includes('Helpline')) {
-        const pLink = card.querySelector('p a[href^="tel:"]');
-        if (pLink) {
-          pLink.href = 'tel:+91' + cleanPhone;
-          pLink.textContent = '+91 ' + cleanPhone;
-        }
-      }
-    });
-
-    document.querySelectorAll('[data-store-phone], [data-setting="phone"]').forEach(el => {
-      if (el.tagName === 'A') {
-        el.href = `tel:+91${cleanPhone}`;
-      } else {
-        el.textContent = `+91 ${cleanPhone}`;
-      }
-    });
-
-    // 4. Update Email links and displays
+    // 4. SUPPORT / CONTACT EMAIL (Across ALL pages)
     const mailLinks = document.querySelectorAll('a[href^="mailto:"]');
     mailLinks.forEach(a => {
       a.href = `mailto:${email}`;
-      if (a.textContent.includes('@')) {
+      if (a.textContent.includes('@') || a.closest('.info-card')) {
         a.textContent = email;
       }
     });
 
     // Footer contact list items for email
-    document.querySelectorAll('.footer-contact i.bi-envelope, .footer-contact svg.bi-envelope').forEach(icon => {
-      const span = icon.closest('li')?.querySelector('span') || icon.nextElementSibling;
-      if (span && span.tagName === 'SPAN') {
-        span.textContent = email;
+    document.querySelectorAll('.footer-contact li, .site-footer li').forEach(li => {
+      if (li.querySelector('.bi-envelope, .bi-envelope-fill, svg.bi-envelope') || li.innerHTML.includes('bi-envelope')) {
+        const span = li.querySelector('span');
+        if (span) {
+          span.textContent = email;
+        }
       }
     });
 
     // Contact page info-card email
     document.querySelectorAll('.info-card').forEach(card => {
-      if (card.innerHTML.includes('✉️') || card.innerHTML.includes('Email Support')) {
-        const mailA = card.querySelector('p a[href^="mailto:"]');
+      if (card.innerHTML.includes('✉️') || card.innerHTML.includes('Email Support') || card.innerHTML.includes('bi-envelope')) {
+        const mailA = card.querySelector('p a[href^="mailto:"]') || card.querySelector('a');
         if (mailA) {
           mailA.href = `mailto:${email}`;
           mailA.textContent = email;
@@ -1317,12 +1319,14 @@ async function applySiteSettingsToPage(customSettings = null) {
       }
     });
 
-    // 5. Update Address across all elements
+    // 5. WORKSHOP / FACTORY / SHOWROOM ADDRESS (Across ALL pages)
     // a. Footer location item in main store pages
-    document.querySelectorAll('.footer-contact i.bi-geo-alt, .footer-contact svg.bi-geo-alt, .footer-contact .bi-geo-alt-fill').forEach(icon => {
-      const span = icon.closest('li')?.querySelector('span') || icon.nextElementSibling;
-      if (span && span.tagName === 'SPAN') {
-        span.textContent = address;
+    document.querySelectorAll('.footer-contact li, .site-footer li').forEach(li => {
+      if (li.querySelector('.bi-geo-alt, .bi-geo-alt-fill, svg.bi-geo-alt') || li.innerHTML.includes('bi-geo-alt')) {
+        const span = li.querySelector('span');
+        if (span) {
+          span.textContent = address;
+        }
       }
     });
 
@@ -1354,20 +1358,7 @@ async function applySiteSettingsToPage(customSettings = null) {
       el.textContent = address;
     });
 
-    // 6. Update Store Brand Name
-    document.querySelectorAll('.store-brand-name, [data-store-brand], [data-setting="brandName"]').forEach(el => {
-      el.textContent = brandName;
-    });
-
-    // Footer copyright brand name
-    document.querySelectorAll('.footer-bottom, footer .footer-bottom, .site-footer p').forEach(el => {
-      if (el.innerHTML.includes('©') || el.innerHTML.includes('&copy;')) {
-        const strong = el.querySelector('strong');
-        if (strong) {
-          strong.textContent = brandName;
-        }
-      }
-    });
+    // NOTE: Store Brand Name is explicitly preserved as original and not modified.
   }
 
   if (customSettings) {
@@ -1376,7 +1367,7 @@ async function applySiteSettingsToPage(customSettings = null) {
   }
 
   try {
-    // 1. Instant local render
+    // 1. Instant local render (synchronous - 0ms delay)
     const local = localStorage.getItem('radha_store_settings_v1');
     if (local) {
       try {
@@ -1386,8 +1377,12 @@ async function applySiteSettingsToPage(customSettings = null) {
       applyDOM(DEFAULT_SITE_SETTINGS);
     }
 
-    // 2. Always fetch fresh settings from Firestore Cloud
-    if (typeof fbGetSiteSettings === 'function') {
+    // 2. Real-time Live Database Connection (Firestore onSnapshot Listener)
+    if (typeof fbListenToSiteSettings === 'function') {
+      fbListenToSiteSettings(cloudSettings => {
+        if (cloudSettings) applyDOM(cloudSettings);
+      });
+    } else if (typeof fbGetSiteSettings === 'function') {
       fbGetSiteSettings().then(cloudSettings => {
         if (cloudSettings) applyDOM(cloudSettings);
       }).catch(() => { });
@@ -1396,6 +1391,20 @@ async function applySiteSettingsToPage(customSettings = null) {
     console.warn('applySiteSettingsToPage error:', e);
   }
 }
+
+// Immediate execution & Lifecycle hooks to guarantee application
+try {
+  applySiteSettingsToPage();
+} catch (e) {}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    applySiteSettingsToPage();
+  });
+}
+window.addEventListener('load', () => {
+  applySiteSettingsToPage();
+});
 
 // Real-time synchronization listeners across tabs & admin saves
 window.addEventListener('storage', (e) => {
@@ -1479,7 +1488,7 @@ async function loginCustomerWithDB(emailOrPhone, password) {
 // LOGIN SECURITY & LOCKOUT GUARD (3 Failed Attempts = 2 Min Break)
 // ---------------------------------------------------------------
 const LOGIN_MAX_FAILED_ATTEMPTS = 3;
-const LOGIN_LOCKOUT_MS = 2 * 60 * 1000; // 2 minutes (120,000 ms)
+const LOGIN_LOCKOUT_MS = 30 * 60 * 1000; // 30 minutes (1,800,000 ms)
 const LOGIN_FAIL_KEY = 'radha_login_fail_count_v1';
 const LOGIN_LOCKOUT_KEY = 'radha_login_lockout_until_v1';
 

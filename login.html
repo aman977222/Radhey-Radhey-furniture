@@ -104,7 +104,7 @@
       <form onsubmit="handleLogin(event)" id="loginForm">
         <div class="form-group">
           <label>Email Address or Mobile Number</label>
-          <input type="text" id="loginUser" placeholder="name@email.com or 10-digit mobile" required autocomplete="username">
+          <input type="text" id="loginUser" placeholder="name@email.com or 10-digit mobile" required autocomplete="off">
         </div>
 
         <div class="form-group">
@@ -185,7 +185,7 @@
             passInput.disabled = false;
             submitBtn.disabled = false;
             submitBtn.textContent = 'Sign In →';
-            showToast('✓ 2 minute ka break samapt ho gaya hai. Ab aap login kar sakte hain.', 'success');
+            showToast('Your 30-minute break is over. You can log in now.','success');
           }
         }, 1000);
       } else {
@@ -201,7 +201,7 @@
 
         if (lock.failCount > 0 && warningDiv) {
           warningDiv.style.display = 'block';
-          warningDiv.innerHTML = `⚠️ Galat password! 3 baar galat password and username dalne par 2 minute ka break lag jayega. (Bache attempts: <strong>${lock.attemptsLeft}</strong>)`;
+          warningDiv.innerHTML = `⚠️ Incorrect password! Entering an incorrect password and username 3 times will result in a 30-minute break. (Remaining attempts: <strong>${lock.attemptsLeft}</strong>)`;
         }
       }
     }
@@ -214,7 +214,7 @@
       // 1. Guard check: Is login locked?
       const lockCheck = checkLoginLockout();
       if (lockCheck.isLocked) {
-        showToast(`Login locked hai! Kripya ${formatTime(lockCheck.remainingSec)} tak wait karein.`, 'error');
+        showToast(`Login locked! Please wait for ${formatTime(lockCheck.remainingSec)}.`, 'error');
         checkAndApplyLockout();
         return;
       }
@@ -262,13 +262,13 @@
           // Failure: Record failed attempt and check 3-attempt limit
           const failState = handleLoginFailure();
           if (failState.isLocked) {
-            showToast('🛑 3 baar galat password dala gaya! Suraksha ke liye 2 minute ka break lag gaya hai.', 'error');
+            showToast('🛑 Incorrect password entered 3 times! A 2-minute break has been applied for security.', 'error');
             checkAndApplyLockout();
           } else {
             showToast((res && res.message) || 'Login failed. Please check credentials.', 'error');
             if (warningDiv) {
               warningDiv.style.display = 'block';
-              warningDiv.innerHTML = `⚠️ Galat password! 3 baar galat dalne par 2 minute ka break lag jayega. (Bache attempts: <strong>${failState.attemptsLeft}</strong>)`;
+              warningDiv.innerHTML = `⚠️ Incorrect password! Entering it incorrectly 3 times will result in a 30-minute break. (Remaining attempts: <strong>${failState.attemptsLeft}</strong>)`;
             }
             submitBtn.textContent = 'Sign In →';
             submitBtn.disabled = false;
@@ -293,11 +293,11 @@
         if (notice) {
           notice.style.display = 'block';
           if (redirectParam.includes('cart')) {
-            notice.innerHTML = '🛒 <strong>Cart Access:</strong> Kripya apne Cart ko dekhne ya items add karne ke liye pehle Login karein.';
+            notice.innerHTML = '🛒 <strong>Cart Access:</strong> Please log in first to view your cart or add items.';
           } else if (redirectParam.includes('wishlist')) {
-            notice.innerHTML = '❤️ <strong>Wishlist Access:</strong> Kripya apni saved Wishlist dekhne ke liye pehle Login karein.';
+            notice.innerHTML = '❤️ <strong>Wishlist Access:</strong> Please log in first to view your saved wishlist.';
           } else {
-            notice.innerHTML = '🔐 <strong>Login Required:</strong> Aage badhne ke liye kripya apne account me Login karein.';
+            notice.innerHTML = '🔐 <strong>Login Required:</strong> Please log in to your account to proceed.';
           }
         }
       }

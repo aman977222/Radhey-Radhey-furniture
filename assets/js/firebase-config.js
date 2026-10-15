@@ -94,15 +94,22 @@
 })();
 
 // ================================================================
-// AUTOMATIC 1-HOUR BROWSER DATA EXPIRY MANAGER (AUTO-PURGE TTL)
-// Har browser-saved data (localStorage) 1 ghante (3,600,000 ms) baad
-// automatic delete ho jaata hai.
+// AUTOMATIC MIDNIGHT (12:00 AM) BROWSER DATA EXPIRY MANAGER
+// Har browser-saved data (localStorage) agle midnight (12:00 AM)
+// par automatic delete/expire ho jaata hai.
 // ================================================================
 (function initAutoExpireStorageManager() {
   if (window.__radhaStorageManagerInitialized) return;
   window.__radhaStorageManagerInitialized = true;
 
-  const DEFAULT_TTL_MS = 60 * 60 * 1000; // 1 Hour = 3,600,000 milliseconds
+  // अब अगली रात 12:00 AM तक कितने millisecond बचे हैं, वह लौटाता है
+  function getDefaultTTL() {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0); // आज रात 12:00 AM
+    return Math.max(1000, midnight.getTime() - now.getTime());
+  }
+
   const META_STORAGE_KEY = '__radha_storage_ttl_meta_v1__';
 
   const rawSetItem = Storage.prototype.setItem;
@@ -110,7 +117,10 @@
   const rawRemoveItem = Storage.prototype.removeItem;
   const rawClear = Storage.prototype.clear;
 
-  let activeTTL = DEFAULT_TTL_MS;
+  let customOverrideTTL = null;
+  function getActiveTTL() {
+    return customOverrideTTL !== null ? customOverrideTTL : getDefaultTTL();
+  }
 
   function loadMetadata() {
     try {
@@ -127,7 +137,7 @@
     } catch (e) {}
   }
 
-  // Active Purge: Delete any key older than 1 hour
+  // Active Purge: Delete any key older than expiration
   function purgeExpiredItems() {
     const meta = loadMetadata();
     const now = Date.now();
@@ -153,8 +163,9 @@
       const key = localStorage.key(i);
       if (!key || key === META_STORAGE_KEY) continue;
       if (!meta[key]) {
-        // First discovery: set 1-hour expiration from now
-        meta[key] = { savedAt: now, expiresAt: now + activeTTL };
+        // First discovery: set midnight expiration from now
+        const ttl = getActiveTTL();
+        meta[key] = { savedAt: now, expiresAt: now + ttl };
         hasChanges = true;
       } else {
         const expiresAt = typeof meta[key] === 'object' ? meta[key].expiresAt : meta[key];
@@ -172,7 +183,7 @@
     }
 
     if (expiredKeys.length > 0) {
-      console.log(`[Radha Storage Guard] 1 Hour Expired — Auto-deleted ${expiredKeys.length} browser items:`, expiredKeys);
+      console.log(`[Radha Storage Guard] Midnight Expired — Auto-deleted ${expiredKeys.length} browser items:`, expiredKeys);
       window.dispatchEvent(new CustomEvent('radha_storage_expired', { detail: { keys: expiredKeys } }));
 
       // Check if session was deleted
@@ -189,7 +200,7 @@
     const isProtectedArea = window.location.pathname.includes('/admin/') || window.location.pathname.includes('/user/');
     if (isProtectedArea && !window.__sessionExpireAlertShown) {
       window.__sessionExpireAlertShown = true;
-      alert('⏰ 1 Ghante ka samay poora ho gaya hai. Suraksha ke liye browser ka data aur session delete ho gaya hai. Kripya dobara login karein.');
+      alert('⏰ 12:00 AM Midnight ho chuka hai. Suraksha ke liye session aur local data expire ho gaya hai. Kripya dobara login karein.');
       const redirectPrefix = window.location.pathname.includes('/user/') || window.location.pathname.includes('/admin/') ? '../' : '';
       window.location.href = redirectPrefix + 'login.html';
     }
@@ -200,9 +211,10 @@
     if (this === localStorage && key !== META_STORAGE_KEY) {
       const now = Date.now();
       const meta = loadMetadata();
+      const ttl = getActiveTTL();
       meta[key] = {
         savedAt: now,
-        expiresAt: now + activeTTL
+        expiresAt: now + ttl
       };
       saveMetadata(meta);
     }
@@ -249,7 +261,8 @@
 
   // Expose global manager for verification & testing
   window.radhaStorageManager = {
-    TTL_MS: activeTTL,
+    get TTL_MS() { return getActiveTTL(); },
+    getDefaultTTL: getDefaultTTL,
     getRemainingSeconds: function(key) {
       const meta = loadMetadata();
       if (!meta[key]) return 0;
@@ -261,12 +274,13 @@
       const meta = loadMetadata();
       const now = Date.now();
       const report = {};
+      const currentTTL = getActiveTTL();
       for (const k in meta) {
         const entry = meta[k];
         const exp = typeof entry === 'object' ? entry.expiresAt : entry;
         const remSec = Math.max(0, Math.round((exp - now) / 1000));
         report[k] = {
-          savedAgoMinutes: Math.round((now - (entry.savedAt || (exp - activeTTL))) / 60000),
+          savedAgoMinutes: Math.round((now - (entry.savedAt || (exp - currentTTL))) / 60000),
           remainingMinutes: Math.round(remSec / 60),
           remainingSeconds: remSec,
           isExpired: now >= exp
@@ -281,7 +295,7 @@
       console.log('[Radha Storage Guard] All browser data successfully purged.');
     },
     setTestTTL: function(seconds) {
-      activeTTL = seconds * 1000;
+      customOverrideTTL = seconds * 1000;
       console.log(`[Radha Storage Guard] TTL temporarily set to ${seconds} seconds for testing.`);
     }
   };
@@ -1527,7 +1541,7 @@ const DEFAULT_COUPONS = [
 ];
 
 const DEFAULT_SITE_SETTINGS = {
-  brandName: 'Radhey Radhey Funicher',
+  brandName: 'Radhey Radhey Furniture & Handicraft',
   phone: '9772225296',
   whatsapp: '9772225296',
   email: 'jangid7090@gmail.com',
@@ -1537,6 +1551,58 @@ const DEFAULT_SITE_SETTINGS = {
   coupons: DEFAULT_COUPONS,
   themeColor: 'Red & Black Theme'
 };
+
+let _fbActiveSiteSettingsUnsub = null;
+
+/**
+ * Real-time Snapshot Listener for Store & Website Configurations.
+ * Connects directly to Firestore database collection 'settings', doc 'store_config'.
+ * Fires instantly whenever any change is made to store settings in the database.
+ */
+function fbListenToSiteSettings(onChange) {
+  if (typeof _fbActiveSiteSettingsUnsub === 'function') {
+    try { _fbActiveSiteSettingsUnsub(); } catch (e) {}
+    _fbActiveSiteSettingsUnsub = null;
+  }
+
+  initFirebaseCloud().then(db => {
+    if (!db) return;
+    try {
+      _fbActiveSiteSettingsUnsub = db.collection('settings').doc('store_config').onSnapshot({ includeMetadataChanges: true }, docSnap => {
+        if (docSnap && docSnap.exists) {
+          const raw = docSnap.data() || {};
+          const cloudData = { ...DEFAULT_SITE_SETTINGS, ...raw };
+          if (cloudData.phone) cloudData.phone = cloudData.phone.replace(/[^0-9]/g, '').slice(-10) || '9772225296';
+          if (cloudData.whatsapp) cloudData.whatsapp = cloudData.whatsapp.replace(/[^0-9]/g, '').slice(-10) || '9772225296';
+          if (!Array.isArray(cloudData.coupons) || cloudData.coupons.length === 0) {
+            cloudData.coupons = DEFAULT_COUPONS;
+          }
+          try {
+            localStorage.setItem('radha_store_settings_v1', JSON.stringify(cloudData));
+            localStorage.setItem('radha_store_coupons_v1', JSON.stringify(cloudData.coupons));
+          } catch (e) {}
+
+          window.dispatchEvent(new CustomEvent('radha_settings_updated', { detail: cloudData }));
+
+          if (typeof onChange === 'function') {
+            onChange(cloudData);
+          }
+        }
+      }, err => {
+        console.warn('Realtime site settings listener error:', err.message);
+      });
+    } catch (e) {
+      console.warn('Attach site settings listener error:', e);
+    }
+  });
+
+  return function unsubscribe() {
+    if (typeof _fbActiveSiteSettingsUnsub === 'function') {
+      try { _fbActiveSiteSettingsUnsub(); } catch (e) {}
+      _fbActiveSiteSettingsUnsub = null;
+    }
+  };
+}
 
 async function fbGetSiteSettings() {
   try {
@@ -1581,7 +1647,7 @@ async function fbSaveSiteSettings(settingsData) {
   const coupons = Array.isArray(settingsData.coupons) ? settingsData.coupons : DEFAULT_COUPONS;
   const merged = { ...DEFAULT_SITE_SETTINGS, ...settingsData, coupons: coupons, phone: cleanPhone, whatsapp: cleanWa, updatedAt: new Date().toISOString() };
 
-  // 1. Local instant save
+  // 1. Local instant save (0ms immediate update)
   try {
     localStorage.setItem('radha_store_settings_v1', JSON.stringify(merged));
     localStorage.setItem('radha_store_coupons_v1', JSON.stringify(coupons));
@@ -1594,20 +1660,20 @@ async function fbSaveSiteSettings(settingsData) {
     window.dispatchEvent(new CustomEvent('radha_settings_updated', { detail: merged }));
   } catch (e) {}
 
-  // 2. Cloud Firestore sync
+  // 2. Cloud Firestore Database sync
   try {
     const db = await initFirebaseCloud();
     if (db) {
       await db.collection('settings').doc('store_config').set(merged, { merge: true });
       _log('Store configurations saved to Firebase Firestore');
-      return { success: true, settings: merged };
+      return { success: true, cloudSaved: true, settings: merged };
+    } else {
+      return { success: true, cloudSaved: false, cloudWarning: 'Firebase Cloud DB initialize nahi ho saka.', settings: merged };
     }
   } catch (e) {
     console.error('Firestore save settings error:', e);
-    return { success: true, settings: merged, cloudWarning: e.message };
+    return { success: true, cloudSaved: false, cloudWarning: e.message, settings: merged };
   }
-
-  return { success: true, settings: merged };
 }
 
 async function fbGetCoupons() {
