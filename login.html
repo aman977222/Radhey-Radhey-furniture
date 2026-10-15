@@ -84,16 +84,23 @@
         <p style="color: gray; font-size: 0.9rem;">Sign in to track orders and manage saved wooden designs</p>
       </div>
 
-      <div id="loginPromptNotice" style="display: none; margin-bottom: 20px; padding: 12px 14px; background: snow; border-left: 4px solid red; border-radius: 6px; font-size: 0.86rem; color: darkred; line-height: 1.4;"></div>
+      <div id="loginPromptNotice"
+        style="display: none; margin-bottom: 20px; padding: 12px 14px; background: snow; border-left: 4px solid red; border-radius: 6px; font-size: 0.86rem; color: darkred; line-height: 1.4;">
+      </div>
 
       <!-- 2-Minute Lockout Alert Container -->
-      <div id="loginLockoutBox" style="display: none; margin-bottom: 22px; padding: 18px; background: snow; border: 2px solid red; border-radius: 10px; text-align: center;">
+      <div id="loginLockoutBox"
+        style="display: none; margin-bottom: 22px; padding: 18px; background: snow; border: 2px solid red; border-radius: 10px; text-align: center;">
         <div style="font-size: 1.8rem; margin-bottom: 6px;">🛑</div>
-        <h4 style="color: darkred; font-weight: 800; font-size: 1.05rem; margin-bottom: 6px;">Login Temporarily Locked</h4>
+        <h4 style="color: darkred; font-weight: 800; font-size: 1.05rem; margin-bottom: 6px;">Login Temporarily Locked
+        </h4>
         <p style="color: dimgray; font-size: 0.88rem; line-height: 1.4; margin-bottom: 12px;">
-          Suraksha ke liye: <strong>3 baar galat password</strong> dalne par <strong>2 minute ka break</strong> lagaya gaya hai.
+          Suraksha ke liye: <strong>3 baar galat password</strong> dalne par <strong>2 minute ka break</strong> lagaya
+          gaya hai.
         </p>
-        <div style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: darkred; color: white; padding: 8px 22px; border-radius: 8px; font-weight: 800; font-size: 1.35rem; font-family: monospace; letter-spacing: 1.5px;" id="lockoutTimerDisplay">
+        <div
+          style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: darkred; color: white; padding: 8px 22px; border-radius: 8px; font-weight: 800; font-size: 1.35rem; font-family: monospace; letter-spacing: 1.5px;"
+          id="lockoutTimerDisplay">
           ⏱️ 02:00
         </div>
         <p style="color: gray; font-size: 0.78rem; margin-top: 10px; margin-bottom: 0;">
@@ -114,15 +121,21 @@
               style="font-size: 0.8rem; color: var(--primary-red); font-weight: 600;">Forgot?</a>
           </div>
           <div style="position: relative; display: flex; align-items: center;">
-            <input type="password" id="loginPass" placeholder="Enter your password" required autocomplete="current-password" style="width: 100%; padding-right: 42px;">
-            <button type="button" onclick="togglePasswordVisibility('loginPass', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: gray; font-size: 1.15rem; padding: 4px;" title="Show/Hide Password">
+            <input type="password" id="loginPass" placeholder="Enter your password" required
+              autocomplete="current-password" style="width: 100%; padding-right: 42px;">
+            <button type="button" onclick="togglePasswordVisibility('loginPass', this)"
+              style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: gray; font-size: 1.15rem; padding: 4px;"
+              title="Show/Hide Password">
               👁️
             </button>
           </div>
-          <div id="loginAttemptsWarning" style="display: none; font-size: 0.82rem; color: red; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: snow; border-radius: 4px; border: 1px solid mistyrose;"></div>
+          <div id="loginAttemptsWarning"
+            style="display: none; font-size: 0.82rem; color: red; font-weight: 600; margin-top: 6px; padding: 4px 8px; background: snow; border-radius: 4px; border: 1px solid mistyrose;">
+          </div>
         </div>
 
-        <button type="submit" id="loginSubmitBtn" class="btn btn-red btn-block" style="padding: 13px; font-size: 1rem; margin-top: 10px;">
+        <button type="submit" id="loginSubmitBtn" class="btn btn-red btn-block"
+          style="padding: 13px; font-size: 1rem; margin-top: 10px;">
           Sign In →
         </button>
       </form>
@@ -185,7 +198,7 @@
             passInput.disabled = false;
             submitBtn.disabled = false;
             submitBtn.textContent = 'Sign In →';
-            showToast('Your 30-minute break is over. You can log in now.','success');
+            showToast('Your 30-minute break is over. You can log in now.', 'success');
           }
         }, 1000);
       } else {
@@ -232,7 +245,7 @@
           if (warningDiv) warningDiv.style.display = 'none';
 
           if (typeof syncCloudUserData === 'function') {
-            await syncCloudUserData().catch(() => {});
+            await syncCloudUserData().catch(() => { });
           }
 
           const role = (res.user && res.user.role ? res.user.role : 'user').toLowerCase();

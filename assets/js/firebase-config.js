@@ -111,6 +111,16 @@
   }
 
   const META_STORAGE_KEY = '__radha_storage_ttl_meta_v1__';
+  // Store configurations and product catalogs must be permanent and never deleted at midnight
+  const EXEMPT_STORAGE_KEYS = [
+    'radha_store_settings_v1',
+    'radha_store_settings_backup_v1',
+    'radha_store_coupons_v1',
+    'radha_furniture_custom_products_v1',
+    'radha_custom_products_v1',
+    'radha_products_cache_v1',
+    'radha_registered_users_v1'
+  ];
 
   const rawSetItem = Storage.prototype.setItem;
   const rawGetItem = Storage.prototype.getItem;
@@ -125,7 +135,19 @@
   function loadMetadata() {
     try {
       const raw = rawGetItem.call(localStorage, META_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
+      const meta = raw ? JSON.parse(raw) : {};
+      // Ensure exempt keys are never in meta
+      let cleaned = false;
+      for (const ek of EXEMPT_STORAGE_KEYS) {
+        if (meta[ek]) {
+          delete meta[ek];
+          cleaned = true;
+        }
+      }
+      if (cleaned) {
+        try { rawSetItem.call(localStorage, META_STORAGE_KEY, JSON.stringify(meta)); } catch (e) {}
+      }
+      return meta;
     } catch (e) {
       return {};
     }
@@ -133,6 +155,9 @@
 
   function saveMetadata(meta) {
     try {
+      for (const ek of EXEMPT_STORAGE_KEYS) {
+        if (meta[ek]) delete meta[ek];
+      }
       rawSetItem.call(localStorage, META_STORAGE_KEY, JSON.stringify(meta));
     } catch (e) {}
   }
@@ -147,6 +172,11 @@
     // 1. Check all registered keys in metadata
     for (const key in meta) {
       if (!meta.hasOwnProperty(key)) continue;
+      if (EXEMPT_STORAGE_KEYS.includes(key)) {
+        delete meta[key];
+        hasChanges = true;
+        continue;
+      }
       const entry = meta[key];
       const expiresAt = typeof entry === 'object' ? entry.expiresAt : entry;
       
@@ -161,7 +191,7 @@
     // 2. Also track any unmapped localStorage keys that exist
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (!key || key === META_STORAGE_KEY) continue;
+      if (!key || key === META_STORAGE_KEY || EXEMPT_STORAGE_KEYS.includes(key)) continue;
       if (!meta[key]) {
         // First discovery: set midnight expiration from now
         const ttl = getActiveTTL();
@@ -208,7 +238,7 @@
 
   // Intercept Storage.prototype.setItem
   Storage.prototype.setItem = function(key, value) {
-    if (this === localStorage && key !== META_STORAGE_KEY) {
+    if (this === localStorage && key !== META_STORAGE_KEY && !EXEMPT_STORAGE_KEYS.includes(key)) {
       const now = Date.now();
       const meta = loadMetadata();
       const ttl = getActiveTTL();
@@ -223,7 +253,7 @@
 
   // Intercept Storage.prototype.getItem
   Storage.prototype.getItem = function(key) {
-    if (this === localStorage && key !== META_STORAGE_KEY) {
+    if (this === localStorage && key !== META_STORAGE_KEY && !EXEMPT_STORAGE_KEYS.includes(key)) {
       const meta = loadMetadata();
       if (meta[key]) {
         const now = Date.now();
@@ -1577,8 +1607,21 @@ function fbListenToSiteSettings(onChange) {
           if (!Array.isArray(cloudData.coupons) || cloudData.coupons.length === 0) {
             cloudData.coupons = DEFAULT_COUPONS;
           }
+
+          // Guard against stale cloud snapshot overwriting fresher local settings (e.g. within 2 mins)
           try {
+            const localRaw = localStorage.getItem('radha_store_settings_v1') || localStorage.getItem('radha_store_settings_backup_v1');
+            if (localRaw) {
+              const localParsed = JSON.parse(localRaw);
+              const localTime = localParsed.updatedAt ? new Date(localParsed.updatedAt).getTime() : 0;
+              const cloudTime = cloudData.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
+              if (localTime > cloudTime && (Date.now() - localTime < 120000)) {
+                if (typeof onChange === 'function') onChange(localParsed);
+                return;
+              }
+            }
             localStorage.setItem('radha_store_settings_v1', JSON.stringify(cloudData));
+            localStorage.setItem('radha_store_settings_backup_v1', JSON.stringify(cloudData));
             localStorage.setItem('radha_store_coupons_v1', JSON.stringify(cloudData.coupons));
           } catch (e) {}
 
@@ -1616,9 +1659,20 @@ async function fbGetSiteSettings() {
         if (!Array.isArray(cloudData.coupons) || cloudData.coupons.length === 0) {
           cloudData.coupons = DEFAULT_COUPONS;
         }
-        localStorage.setItem('radha_store_settings_v1', JSON.stringify(cloudData));
-        localStorage.setItem('radha_store_coupons_v1', JSON.stringify(cloudData.coupons));
-        return cloudData;
+
+        // Don't overwrite if local is fresher
+        const localRaw = localStorage.getItem('radha_store_settings_v1') || localStorage.getItem('radha_store_settings_backup_v1');
+        let localTime = 0;
+        if (localRaw) {
+          try { localTime = new Date(JSON.parse(localRaw).updatedAt).getTime() || 0; } catch (e) {}
+        }
+        const cloudTime = cloudData.updatedAt ? new Date(cloudData.updatedAt).getTime() || 0 : 0;
+        if (localTime <= cloudTime || (Date.now() - localTime >= 120000)) {
+          localStorage.setItem('radha_store_settings_v1', JSON.stringify(cloudData));
+          localStorage.setItem('radha_store_settings_backup_v1', JSON.stringify(cloudData));
+          localStorage.setItem('radha_store_coupons_v1', JSON.stringify(cloudData.coupons));
+          return cloudData;
+        }
       }
     }
   } catch (e) {
@@ -1626,7 +1680,7 @@ async function fbGetSiteSettings() {
   }
 
   try {
-    const local = localStorage.getItem('radha_store_settings_v1');
+    const local = localStorage.getItem('radha_store_settings_v1') || localStorage.getItem('radha_store_settings_backup_v1');
     if (local) {
       const parsed = { ...DEFAULT_SITE_SETTINGS, ...JSON.parse(local) };
       if (parsed.phone) parsed.phone = parsed.phone.replace(/[^0-9]/g, '').slice(-10) || '9772225296';
@@ -1645,11 +1699,22 @@ async function fbSaveSiteSettings(settingsData) {
   const cleanPhone = (settingsData.phone || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
   const cleanWa = (settingsData.whatsapp || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
   const coupons = Array.isArray(settingsData.coupons) ? settingsData.coupons : DEFAULT_COUPONS;
-  const merged = { ...DEFAULT_SITE_SETTINGS, ...settingsData, coupons: coupons, phone: cleanPhone, whatsapp: cleanWa, updatedAt: new Date().toISOString() };
+  const bannerText = (settingsData.bannerText !== undefined && settingsData.bannerText !== null) ? String(settingsData.bannerText).trim() : DEFAULT_SITE_SETTINGS.bannerText;
+  const nowIso = new Date().toISOString();
+  const merged = { 
+    ...DEFAULT_SITE_SETTINGS, 
+    ...settingsData, 
+    bannerText: bannerText,
+    coupons: coupons, 
+    phone: cleanPhone, 
+    whatsapp: cleanWa, 
+    updatedAt: nowIso 
+  };
 
-  // 1. Local instant save (0ms immediate update)
+  // 1. Local instant save (0ms immediate update to primary and backup keys)
   try {
     localStorage.setItem('radha_store_settings_v1', JSON.stringify(merged));
+    localStorage.setItem('radha_store_settings_backup_v1', JSON.stringify(merged));
     localStorage.setItem('radha_store_coupons_v1', JSON.stringify(coupons));
   } catch (e) {
     console.warn('Local settings save error:', e);
@@ -1661,19 +1726,23 @@ async function fbSaveSiteSettings(settingsData) {
   } catch (e) {}
 
   // 2. Cloud Firestore Database sync
+  let cloudSaved = false;
+  let cloudWarning = null;
   try {
     const db = await initFirebaseCloud();
     if (db) {
       await db.collection('settings').doc('store_config').set(merged, { merge: true });
       _log('Store configurations saved to Firebase Firestore');
-      return { success: true, cloudSaved: true, settings: merged };
+      cloudSaved = true;
     } else {
-      return { success: true, cloudSaved: false, cloudWarning: 'Firebase Cloud DB initialize nahi ho saka.', settings: merged };
+      cloudWarning = 'Firebase Cloud DB initialize nahi ho saka.';
     }
   } catch (e) {
     console.error('Firestore save settings error:', e);
-    return { success: true, cloudSaved: false, cloudWarning: e.message, settings: merged };
+    cloudWarning = e.message;
   }
+
+  return { success: true, cloudSaved, cloudWarning, settings: merged };
 }
 
 async function fbGetCoupons() {

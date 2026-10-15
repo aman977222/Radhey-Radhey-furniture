@@ -1212,15 +1212,23 @@ async function applySiteSettingsToPage(customSettings = null) {
     const fullWa = '91' + cleanWa;
 
     // 1. TOP ANNOUNCEMENT BAR MARQUEE TEXT (Across ALL pages: Home, Shop, Contact, About, Category, PDP, Aluminium, etc.)
-    if (bannerText) {
-      const topBarLefts = document.querySelectorAll('.top-bar-left, .top-bar .top-bar-left, .top-announcement-bar, [data-setting="bannerText"]');
+    if (bannerText !== undefined && bannerText !== null) {
+      const bannerStr = String(bannerText).trim();
+      let displayTag = 'SPECIAL OFFER';
+      let contentText = bannerStr;
+
+      // Extract tag if user included [SPECIAL OFFER] or SPECIAL OFFER: at start to avoid duplicate tags
+      const tagMatch = contentText.match(/^\[?(SPECIAL\s*OFFER|OFFER|SALE|DISCOUNT|DEAL)\]?\s*[:-]?\s*/i);
+      if (tagMatch) {
+        displayTag = tagMatch[1].toUpperCase();
+        contentText = contentText.slice(tagMatch[0].length).trim();
+      }
+
+      const topBarLefts = document.querySelectorAll('.top-bar-left, .top-bar .top-bar-left, .top-announcement-bar, [data-setting="bannerText"], .announcement-bar');
       topBarLefts.forEach(container => {
         const existingTag = container.querySelector('.tag');
-        if (existingTag) {
-          container.innerHTML = `<span><span class="tag">${existingTag.textContent.trim()}</span> ${bannerText}</span>`;
-        } else {
-          container.innerHTML = `<span>${bannerText}</span>`;
-        }
+        const tagText = existingTag ? (existingTag.textContent.trim() || displayTag) : displayTag;
+        container.innerHTML = `<span><span class="tag">${tagText}</span> ${contentText}</span>`;
       });
     }
 
@@ -1368,7 +1376,7 @@ async function applySiteSettingsToPage(customSettings = null) {
 
   try {
     // 1. Instant local render (synchronous - 0ms delay)
-    const local = localStorage.getItem('radha_store_settings_v1');
+    const local = localStorage.getItem('radha_store_settings_v1') || localStorage.getItem('radha_store_settings_backup_v1');
     if (local) {
       try {
         applyDOM(JSON.parse(local));
@@ -1401,14 +1409,26 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     applySiteSettingsToPage();
   });
+} else {
+  applySiteSettingsToPage();
 }
 window.addEventListener('load', () => {
   applySiteSettingsToPage();
 });
 
+// Re-apply immediately when user switches tabs or focuses the page
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    applySiteSettingsToPage();
+  }
+});
+window.addEventListener('focus', () => {
+  applySiteSettingsToPage();
+});
+
 // Real-time synchronization listeners across tabs & admin saves
 window.addEventListener('storage', (e) => {
-  if (e.key === 'radha_store_settings_v1') {
+  if (e.key === 'radha_store_settings_v1' || e.key === 'radha_store_settings_backup_v1') {
     try {
       const parsed = JSON.parse(e.newValue);
       if (parsed) applySiteSettingsToPage(parsed);

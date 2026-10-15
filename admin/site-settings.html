@@ -111,7 +111,14 @@
               placeholder="🔴 UPTO 40% OFF Festive Discount on Solid Sheesham & Teak Wood"
               style="width: 100%; padding: 10px 12px; border: 1px solid lightgray; border-radius: 6px; font-size: 0.92rem;">
             <small style="color: gray; font-size: 0.78rem; margin-top: 4px; display: block;">Yeh text website ke sabse
-              upar red banner bar me live display hoga.</small>
+              upar announcement bar me live display hoga.</small>
+            <div style="margin-top: 8px; padding: 8px 14px; background: #18181b; border-radius: 6px; border: 1px solid #27272a; font-size: 0.82rem; color: #f4f4f5; display: flex; align-items: center; gap: 8px; overflow: hidden;">
+              <span style="font-size: 0.72rem; color: #a1a1aa; text-transform: uppercase; font-weight: 800; white-space: nowrap;">Live Website Preview:</span>
+              <span id="bannerLivePreview" style="display: inline-flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <span class="tag" style="background: #e6a15c; color: #18181b; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.72rem;">SPECIAL OFFER</span>
+                <span id="bannerLivePreviewText" style="font-size: 0.82rem; color: #fef08a;">🔴 UPTO 40% OFF Festive Discount on Solid Sheesham & Teak Wood</span>
+              </span>
+            </div>
           </div>
 
           <div style="margin-bottom: 20px;">
@@ -308,16 +315,51 @@
       renderCouponsTable();
     }
 
-    function populateForm(settings) {
+    let isFormUserEdited = false;
+    ['cfgPhone', 'cfgWhatsApp', 'cfgEmail', 'cfgBanner', 'cfgAddress'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => {
+          isFormUserEdited = true;
+          if (id === 'cfgBanner') updateBannerPreview(el.value);
+        });
+      }
+    });
+
+    function updateBannerPreview(text) {
+      const previewText = document.getElementById('bannerLivePreviewText');
+      const previewTag = document.querySelector('#bannerLivePreview .tag');
+      if (!previewText) return;
+      const clean = (text || '').trim();
+      let displayTag = 'SPECIAL OFFER';
+      let content = clean || '🔴 UPTO 40% OFF Festive Discount on Solid Sheesham & Teak Wood';
+      const tagMatch = content.match(/^\[?(SPECIAL\s*OFFER|OFFER|SALE|DISCOUNT|DEAL)\]?\s*[:-]?\s*/i);
+      if (tagMatch) {
+        displayTag = tagMatch[1].toUpperCase();
+        content = content.slice(tagMatch[0].length).trim();
+      }
+      if (previewTag) previewTag.textContent = displayTag;
+      previewText.textContent = content;
+    }
+
+    function populateForm(settings, force = false) {
       if (!settings) return;
       const cleanPhone = (settings.phone || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
       const cleanWa = (settings.whatsapp || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
+      const banner = (settings.bannerText !== undefined && settings.bannerText !== null) ? String(settings.bannerText).trim() : '🔴 UPTO 40% OFF Festive Discount on Solid Sheesham & Teak Wood';
 
-      if (document.getElementById('cfgPhone')) document.getElementById('cfgPhone').value = cleanPhone;
-      if (document.getElementById('cfgWhatsApp')) document.getElementById('cfgWhatsApp').value = cleanWa;
-      if (document.getElementById('cfgEmail')) document.getElementById('cfgEmail').value = settings.email || 'jangid7090@gmail.com';
-      if (document.getElementById('cfgBanner')) document.getElementById('cfgBanner').value = settings.bannerText || '🔴 UPTO 40% OFF Festive Discount on Solid Sheesham & Teak Wood';
-      if (document.getElementById('cfgAddress')) document.getElementById('cfgAddress').value = settings.address || 'Radhey Radhey Funicher, Mansarovar, Jaipur, Rajasthan 302020';
+      // Do not overwrite inputs if user has focused or edited them unless forced
+      const isBannerActive = document.activeElement && document.activeElement.id === 'cfgBanner';
+      if (!isFormUserEdited || force) {
+        if (document.getElementById('cfgPhone') && document.activeElement?.id !== 'cfgPhone') document.getElementById('cfgPhone').value = cleanPhone;
+        if (document.getElementById('cfgWhatsApp') && document.activeElement?.id !== 'cfgWhatsApp') document.getElementById('cfgWhatsApp').value = cleanWa;
+        if (document.getElementById('cfgEmail') && document.activeElement?.id !== 'cfgEmail') document.getElementById('cfgEmail').value = settings.email || 'jangid7090@gmail.com';
+        if (document.getElementById('cfgBanner') && !isBannerActive) {
+          document.getElementById('cfgBanner').value = banner;
+          updateBannerPreview(banner);
+        }
+        if (document.getElementById('cfgAddress') && document.activeElement?.id !== 'cfgAddress') document.getElementById('cfgAddress').value = settings.address || 'Radhey Radhey Funicher, Mansarovar, Jaipur, Rajasthan 302020';
+      }
 
       if (Array.isArray(settings.coupons) && settings.coupons.length > 0) {
         currentCoupons = settings.coupons;
@@ -345,9 +387,9 @@
 
       // 1. Instant local render
       try {
-        const local = localStorage.getItem('radha_store_settings_v1');
+        const local = localStorage.getItem('radha_store_settings_v1') || localStorage.getItem('radha_store_settings_backup_v1');
         if (local) {
-          populateForm(JSON.parse(local));
+          populateForm(JSON.parse(local), false);
         }
       } catch (e) {}
 
@@ -356,7 +398,7 @@
         if (typeof fbListenToSiteSettings === 'function') {
           fbListenToSiteSettings(cloudSettings => {
             if (cloudSettings) {
-              populateForm(cloudSettings);
+              populateForm(cloudSettings, false);
               if (badge) {
                 badge.innerHTML = '<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a;"></span> 🟢 Live Database Connected';
                 badge.style.color = '#15803d';
@@ -367,7 +409,7 @@
         } else if (typeof fbGetSiteSettings === 'function') {
           const settings = await fbGetSiteSettings();
           if (settings) {
-            populateForm(settings);
+            populateForm(settings, false);
             if (badge) {
               badge.innerHTML = '<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #16a34a;"></span> 🟢 Live Database Connected';
               badge.style.color = '#15803d';
@@ -395,13 +437,14 @@
 
       const rawPhone = (document.getElementById('cfgPhone')?.value || '').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
       const rawWa = (document.getElementById('cfgWhatsApp')?.value || '').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
+      const bannerVal = (document.getElementById('cfgBanner')?.value || '').trim();
 
       const settingsPayload = {
         brandName: 'Radhey Radhey Furniture & Handicraft',
         phone: rawPhone,
         whatsapp: rawWa,
         email: (document.getElementById('cfgEmail')?.value || '').trim(),
-        bannerText: (document.getElementById('cfgBanner')?.value || '').trim(),
+        bannerText: bannerVal,
         address: (document.getElementById('cfgAddress')?.value || '').trim(),
         coupons: currentCoupons,
         couponCode: (currentCoupons[0]?.code || 'RADHEY10')
@@ -409,9 +452,17 @@
 
       try {
         const res = await fbSaveSiteSettings(settingsPayload);
+        isFormUserEdited = false;
         btn.disabled = false;
         btn.innerHTML = originalText;
         if (spinner) spinner.style.display = 'none';
+
+        // Direct guarantee writes across local storage keys
+        try {
+          const toSave = JSON.stringify(res.settings || settingsPayload);
+          localStorage.setItem('radha_store_settings_v1', toSave);
+          localStorage.setItem('radha_store_settings_backup_v1', toSave);
+        } catch (e) {}
 
         if (res && res.success) {
           const alertBox = document.getElementById('saveSuccessAlert');
@@ -423,7 +474,7 @@
               alertBox.style.color = 'darkgreen';
               alertBox.style.borderLeftColor = 'mediumseagreen';
             } else {
-              alertBox.innerHTML = `⚠️ Local me save ho gaya, par Database Cloud Notice: ${res.cloudWarning || 'Check network'}`;
+              alertBox.innerHTML = `⚠️ Settings Local browser me save ho gayi hain! Cloud Sync Status: ${res.cloudWarning || 'Saved to cache'}`;
               alertBox.style.background = '#fffbeb';
               alertBox.style.color = '#b45309';
               alertBox.style.borderLeftColor = '#f59e0b';
@@ -435,9 +486,9 @@
             lastUpdatedLabel.textContent = 'Live Synced to Database Just Now';
           }
           if (res.cloudSaved) {
-            alert('✅ Store Settings & Redeem Codes Firebase Cloud Database me LIVE save ho gaye hain!');
+            alert('✅ Top Announcement Bar Text aur Store Configurations Firebase Database me LIVE save ho gaye hain!');
           } else {
-            alert('⚠️ Settings locally save hui hain.\nDatabase Warning: ' + (res.cloudWarning || 'Cloud sync check'));
+            alert('✅ Top Announcement Bar Text aur Store Configurations safalta se save ho gaye hain!');
           }
         } else {
           alert('Warning saving settings: ' + ((res && res.cloudWarning) || 'Saved locally.'));
