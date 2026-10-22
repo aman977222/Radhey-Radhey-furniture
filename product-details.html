@@ -7,8 +7,9 @@
   <title>Product Details — Radhey Radhey Furniture & Handicraft</title>
   <meta name="description"
     content="View product specifications, wood finish options, dimensions, and authentic customer reviews.">
-  <link rel="icon" type="image/png" href="assets/images/favicon.png">
-  <link rel="apple-touch-icon" href="assets/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" href="assets/images/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="assets/images/favicon-32x32.png">
   <!-- Google Firebase Cloud SDK (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -531,9 +532,9 @@
     function renderDetails() {
       const p = currentProduct;
       const isFab = ['windows', 'doors', 'gates', 'mirrors', 'partitions', 'railings', 'shower', 'aluminium', 'steel-work'].includes(p.category);
-      const activeSettings = (typeof getActiveStoreSettings === 'function') ? getActiveStoreSettings() : { whatsapp: '9772225296', brandName: 'Radhey Radhey Funicher' };
+      const activeSettings = (typeof getActiveStoreSettings === 'function') ? getActiveStoreSettings() : { whatsapp: '9772225296', brandName: 'Radhey Radhey Furniture' };
       const cleanWa = (activeSettings.whatsapp || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
-      const brandName = activeSettings.brandName || 'Radhey Radhey Funicher';
+      const brandName = activeSettings.brandName || 'Radhey Radhey Furniture';
       document.title = `${p.title} — ${brandName}`;
 
       const loggedUser = getLoggedInCustomer();

@@ -5,8 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Site Settings — Radhey Radhey Furniture Admin</title>
-  <link rel="icon" type="image/png" href="../assets/images/favicon.png">
-  <link rel="apple-touch-icon" href="../assets/images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" href="../assets/images/favicon-32x32.png">
+  <link rel="apple-touch-icon" href="../assets/images/favicon-32x32.png">
   <link rel="stylesheet" href="../assets/css/admin-style.css">
   <link rel="stylesheet" href="../assets/css/style.css">
   <!-- Google Firebase Cloud SDK (Compat) -->
@@ -126,7 +127,7 @@
               style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: black;">Workshop /
               Factory / Showroom Address</label>
             <textarea id="cfgAddress" rows="3" required
-              placeholder="Radhey Radhey Funicher, Mansarovar, Jaipur, Rajasthan 302020"
+              placeholder="Radhey Radhey Furniture, Mansarovar, Jaipur, Rajasthan 302020"
               style="width: 100%; padding: 10px 12px; border: 1px solid lightgray; border-radius: 6px; font-size: 0.92rem; font-family: inherit; resize: vertical;"></textarea>
           </div>
 
@@ -358,7 +359,7 @@
           document.getElementById('cfgBanner').value = banner;
           updateBannerPreview(banner);
         }
-        if (document.getElementById('cfgAddress') && document.activeElement?.id !== 'cfgAddress') document.getElementById('cfgAddress').value = settings.address || 'Radhey Radhey Funicher, Mansarovar, Jaipur, Rajasthan 302020';
+        if (document.getElementById('cfgAddress') && document.activeElement?.id !== 'cfgAddress') document.getElementById('cfgAddress').value = settings.address || 'Radhey Radhey Furniture, Mansarovar, Jaipur, Rajasthan 302020';
       }
 
       if (Array.isArray(settings.coupons) && settings.coupons.length > 0) {

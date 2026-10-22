@@ -507,7 +507,7 @@ function getActiveStoreSettings() {
     whatsapp: '9772225296',
     email: 'jangid7090@gmail.com',
     bannerText: '🔴 UPTO 40% OFF Festive Discount on Solid Sheesham & Teak Wood',
-    address: 'Radhey Radhey Funicher, Mansarovar, Jaipur, Rajasthan 302020',
+    address: 'Radhey Radhey Furniture, Mansarovar, Jaipur, Rajasthan 302020',
     couponCode: 'RADHEY10',
     coupons: (typeof DEFAULT_COUPONS !== 'undefined') ? DEFAULT_COUPONS : [
       { code: 'RADHEY10', type: 'percent', value: 10, minOrder: 0, status: 'active' },
@@ -1204,7 +1204,7 @@ async function applySiteSettingsToPage(customSettings = null) {
   function applyDOM(settings) {
     if (!settings) return;
 
-    const address = settings.address || 'Radhey Radhey Funicher, Mansarovar, Jaipur, Rajasthan 302020';
+    const address = settings.address || 'Radhey Radhey Furniture, Mansarovar, Jaipur, Rajasthan 302020';
     const email = settings.email || 'jangid7090@gmail.com';
     const cleanPhone = (settings.phone || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
     const cleanWa = (settings.whatsapp || '9772225296').replace(/[^0-9]/g, '').slice(-10) || '9772225296';
