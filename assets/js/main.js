@@ -843,46 +843,233 @@ function renderProductCard(product) {
 }
 
 // ---------------------------------------------------------------
-// SEARCH AUTO-SUGGESTION
+// SMART SEARCH KEYWORD EXPANDER & PHONETIC SYNONYMS (Hinglish/Hindi)
+// ---------------------------------------------------------------
+const SEARCH_SYNONYM_MAP = {
+  // Bed variations (Hindi / Hinglish phonetics)
+  'bad': ['bed', 'bedroom', 'palang', 'khatiya', 'double bed', 'king bed', 'queen bed'],
+  'baad': ['bed', 'bedroom', 'palang'],
+  'bed': ['bed', 'bad', 'bedroom', 'palang', 'khatiya'],
+  'beds': ['bed', 'bad', 'bedroom', 'palang'],
+  'palang': ['bed', 'bad', 'bedroom', 'khatiya'],
+  'khatiya': ['bed', 'bad', 'bedroom'],
+  'khat': ['bed', 'bad', 'bedroom'],
+
+  // Sofa variations
+  'sofa': ['sofa', 'shofa', 'couch', 'living', 'settee', 'wooden sofa'],
+  'sofas': ['sofa', 'shofa', 'living', 'couch'],
+  'shofa': ['sofa', 'couch', 'living'],
+  'couch': ['sofa', 'living'],
+
+  // Mandir & Temple variations
+  'mandir': ['mandir', 'mandar', 'temple', 'pooja', 'puja', 'devghar'],
+  'mandar': ['mandir', 'temple', 'pooja', 'puja'],
+  'temple': ['mandir', 'temple', 'pooja'],
+  'pooja': ['mandir', 'temple', 'pooja', 'puja'],
+  'puja': ['mandir', 'temple', 'pooja'],
+
+  // Chair variations
+  'kursi': ['chair', 'kursi'],
+  'chair': ['chair', 'kursi'],
+  'chairs': ['chair', 'kursi'],
+
+  // Dining & Table variations
+  'table': ['table', 'dining', 'center table', 'coffee table', 'mez'],
+  'tables': ['table', 'dining'],
+  'dining': ['dining', 'dining table', 'dining sets', 'table', 'chair'],
+  'mez': ['table', 'dining'],
+
+  // Wardrobe & Almirah
+  'almari': ['wardrobe', 'almirah', 'almari', 'cupboard'],
+  'almirah': ['wardrobe', 'almirah', 'almari', 'cupboard'],
+  'wardrobe': ['wardrobe', 'almirah', 'almari', 'cupboard'],
+  'cupboard': ['wardrobe', 'almirah', 'almari'],
+
+  // Dressing / Mirror
+  'dressing': ['dressing', 'mirror', 'dresser'],
+  'mirror': ['mirror', 'dressing', 'aaina'],
+  'aaina': ['mirror', 'dressing'],
+
+  // Swing
+  'jhula': ['jhula', 'swing'],
+  'swing': ['jhula', 'swing'],
+
+  // Wood Types
+  'sheesham': ['sheesham', 'shisham', 'rosewood'],
+  'shisham': ['sheesham', 'rosewood'],
+  'sagwan': ['sagwan', 'teak', 'teakwood'],
+  'teak': ['teak', 'sagwan', 'teakwood'],
+
+  // Aluminium / Metal Work
+  'door': ['door', 'doors', 'darwaja'],
+  'doors': ['door', 'darwaja'],
+  'darwaja': ['door', 'doors'],
+  'window': ['window', 'windows', 'khidki'],
+  'windows': ['window', 'khidki'],
+  'khidki': ['window', 'windows'],
+  'gate': ['gate', 'gates'],
+  'railing': ['railing', 'railings'],
+  'partition': ['partition', 'partitions']
+};
+
+function expandSearchTerms(rawQuery) {
+  if (!rawQuery) return [];
+  const q = String(rawQuery).toLowerCase().trim();
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const terms = new Set([q, ...tokens]);
+
+  tokens.forEach(tok => {
+    if (SEARCH_SYNONYM_MAP[tok]) {
+      SEARCH_SYNONYM_MAP[tok].forEach(syn => terms.add(syn));
+    }
+  });
+  if (SEARCH_SYNONYM_MAP[q]) {
+    SEARCH_SYNONYM_MAP[q].forEach(syn => terms.add(syn));
+  }
+
+  return Array.from(terms);
+}
+
+function productMatchesQuery(p, rawQuery) {
+  if (!p) return false;
+  if (!rawQuery) return true;
+  const qClean = String(rawQuery).toLowerCase().trim();
+  if (!qClean) return true;
+
+  const terms = expandSearchTerms(qClean);
+
+  const title = String(p.title || '').toLowerCase();
+  const desc = String(p.description || '').toLowerCase();
+  const cat = String(p.category || '').toLowerCase();
+  const catName = String(p.categoryName || '').toLowerCase();
+  const wood = String(p.woodType || '').toLowerCase();
+  const id = String(p.id || p._id || '').toLowerCase();
+  const tags = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : String(p.tags || '').toLowerCase();
+
+  const combined = `${title} ${desc} ${cat} ${catName} ${wood} ${id} ${tags}`;
+
+  // Direct phrase match
+  if (combined.includes(qClean)) return true;
+
+  // Expanded synonym match
+  for (const term of terms) {
+    if (term && combined.includes(term)) {
+      return true;
+    }
+  }
+
+  // Token level match
+  const tokens = qClean.split(/\s+/).filter(Boolean);
+  if (tokens.length > 1) {
+    const anyToken = tokens.some(tok => {
+      if (tok.length < 2) return false;
+      if (combined.includes(tok)) return true;
+      const syns = SEARCH_SYNONYM_MAP[tok] || [];
+      return syns.some(s => combined.includes(s));
+    });
+    if (anyToken) return true;
+  }
+
+  return false;
+}
+
+// Expose globally for pages
+if (typeof window !== 'undefined') {
+  window.expandSearchTerms = expandSearchTerms;
+  window.productMatchesQuery = productMatchesQuery;
+}
+
+function getSearchableCatalog() {
+  if (typeof getLiveCatalogDatabase === 'function') {
+    const list = getLiveCatalogDatabase();
+    if (Array.isArray(list) && list.length > 0) return list;
+  }
+  try {
+    const raw = localStorage.getItem('radha_furniture_custom_products_v1');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  if (typeof PRODUCTS_DATA !== 'undefined' && Array.isArray(PRODUCTS_DATA) && PRODUCTS_DATA.length > 0) {
+    return PRODUCTS_DATA;
+  }
+  return [];
+}
+
+// ---------------------------------------------------------------
+// SEARCH AUTO-SUGGESTION & LIVE HEADER SEARCH
 // ---------------------------------------------------------------
 function setupSearch() {
   const searchInput = document.getElementById('mainSearchInput');
   const dropdown = document.getElementById('searchResultsDropdown');
   if (!searchInput || !dropdown) return;
 
+  const currentPath = window.location.pathname.replace(/\\/g, '/').toLowerCase();
+  const isInUserFolder = currentPath.includes('/user/');
+  const isInAdminFolder = currentPath.includes('/admin/');
+  const isInAlumFolder = currentPath.includes('/aluminium products/') || currentPath.includes('/aluminium%20products/') || currentPath.includes('/aluminium-products/');
+  const rootPrefix = (isInUserFolder || isInAdminFolder || isInAlumFolder) ? '../' : '';
+
+  // Ensure products are primed in the background if catalog is empty
+  const initialCatalog = getSearchableCatalog();
+  if (initialCatalog.length === 0 && typeof getAllProducts === 'function') {
+    getAllProducts().catch(() => {});
+  }
+
   searchInput.addEventListener('input', (e) => {
-    const val = e.target.value.trim().toLowerCase();
+    const val = e.target.value.trim();
     if (val.length < 2) {
       dropdown.classList.remove('active');
       dropdown.innerHTML = '';
       return;
     }
 
-    const matches = PRODUCTS_DATA.filter(p =>
-      p.title.toLowerCase().includes(val) ||
-      p.categoryName.toLowerCase().includes(val) ||
-      p.woodType.toLowerCase().includes(val)
-    ).slice(0, 5);
+    const catalog = getSearchableCatalog();
+    const allMatches = catalog.filter(p => productMatchesQuery(p, val));
+    const matches = allMatches.slice(0, 5);
 
     if (matches.length === 0) {
-      dropdown.innerHTML = `<div style="padding: 14px; color: gray; text-align: center;">No furniture or craft found for "${val}"</div>`;
+      const safeVal = val.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      dropdown.innerHTML = `
+        <div style="padding: 14px 16px; text-align: center;">
+          <div style="color: #64748b; font-size: 0.88rem; font-weight: 600;">No products found for "${safeVal}"</div>
+          <div style="font-size: 0.74rem; color: #94a3b8; margin-top: 4px;">Try searching: Bed, Sofa, Mandir, Dining, Chair</div>
+        </div>
+      `;
       dropdown.classList.add('active');
       return;
     }
 
-    dropdown.innerHTML = matches.map(p => {
+    const itemsHtml = matches.map(p => {
       const isFabProduct = ['windows', 'doors', 'gates', 'mirrors', 'partitions', 'railings', 'shower', 'aluminium', 'steel-work'].includes(p.category);
-      return `
-      <a href="${rootPrefix}product-details.html?id=${p.id}" class="search-result-item">
-        <img src="${resolveStoreImg(p.image, p.category)}" alt="${p.title}">
-        <div style="flex: 1;">
-          <h5 style="font-size: 0.88rem; font-weight: 600; margin-bottom: 2px;">${p.title}</h5>
-          <span style="font-size: 0.8rem; color: ${isFabProduct ? 'darkslategray' : 'red'}; font-weight: 700;">${isFabProduct ? (p.rateUnit ? `Rate: ${p.rateUnit}` : 'On Quotation') : formatPrice(p.price)}</span>
-          <span style="font-size: 0.72rem; color: gray; margin-left: 6px;">(${p.categoryName})</span>
-        </div>
-      </a>
-    `;}).join('');
+      const safeTitle = (p.title || 'Product').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeCat = (p.categoryName || p.category || 'Furniture').replace(/</g, '&lt;');
+      const priceText = isFabProduct ? (p.rateUnit ? `Rate: ${p.rateUnit}` : 'On Quotation') : formatPrice(p.price);
 
+      return `
+        <a href="${rootPrefix}product-details.html?id=${p.id}" class="search-result-item" style="display: flex; gap: 12px; padding: 10px 14px; text-decoration: none; color: inherit; align-items: center; border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
+          <img src="${resolveStoreImg(p.image, p.category)}" alt="${safeTitle}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; flex-shrink: 0;" onerror="this.onerror=null;this.src='${rootPrefix}assets/images/image.png';">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeTitle}</div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+              <span style="font-size: 0.8rem; color: ${isFabProduct ? '#0f766e' : '#c8102e'}; font-weight: 700;">${priceText}</span>
+              <span style="font-size: 0.7rem; color: #64748b; background: #f1f5f9; padding: 1px 6px; border-radius: 4px;">${safeCat}</span>
+            </div>
+          </div>
+        </a>
+      `;
+    }).join('');
+
+    const safeVal = val.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const viewAllHtml = `
+      <a href="${rootPrefix}shop.html?search=${encodeURIComponent(val)}" class="search-view-all-link" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 14px; background: #fff5f5; border-top: 1px solid #fecdd3; font-size: 0.82rem; font-weight: 700; color: #c8102e; text-decoration: none;">
+        <span>🔍 View all ${allMatches.length} products for "${safeVal}"</span>
+        <span>→</span>
+      </a>
+    `;
+
+    dropdown.innerHTML = itemsHtml + viewAllHtml;
     dropdown.classList.add('active');
   });
 
@@ -897,8 +1084,14 @@ function setupSearch() {
     searchForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const val = searchInput.value.trim();
-      if (val) {
-        window.location.href = `shop.html?search=${encodeURIComponent(val)}`;
+      if (!val) return;
+      dropdown.classList.remove('active');
+
+      const onShopPage = window.location.pathname.toLowerCase().endsWith('shop.html');
+      if (onShopPage && typeof window.handleShopPageSearch === 'function') {
+        window.handleShopPageSearch(val);
+      } else {
+        window.location.href = `${rootPrefix}shop.html?search=${encodeURIComponent(val)}`;
       }
     });
   }

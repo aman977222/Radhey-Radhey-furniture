@@ -348,9 +348,9 @@
     let sortBy = 'featured';
 
     const urlParams = new URLSearchParams(window.location.search);
-    const searchParam = urlParams.get('search');
-    const catParam = urlParams.get('cat');
-    const viewParam = urlParams.get('view');
+    let searchParam = (urlParams.get('search') || '').trim();
+    let catParam = (urlParams.get('cat') || '').trim();
+    const viewParam = (urlParams.get('view') || '').trim();
 
     if (catParam) {
       currentCategory = catParam;
@@ -358,53 +358,95 @@
       if (radio) radio.checked = true;
     }
 
-    let currentProductsCatalog = (typeof PRODUCTS_DATA !== 'undefined') ? [...PRODUCTS_DATA] : [];
+    function getShopInitialCatalog() {
+      if (typeof getSearchableCatalog === 'function') {
+        const c = getSearchableCatalog();
+        if (Array.isArray(c) && c.length > 0) return [...c];
+      }
+      if (typeof getLiveCatalogDatabase === 'function') {
+        const c = getLiveCatalogDatabase();
+        if (Array.isArray(c) && c.length > 0) return [...c];
+      }
+      try {
+        const raw = localStorage.getItem('radha_furniture_custom_products_v1');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+      if (typeof PRODUCTS_DATA !== 'undefined' && Array.isArray(PRODUCTS_DATA) && PRODUCTS_DATA.length > 0) {
+        return [...PRODUCTS_DATA];
+      }
+      return [];
+    }
+
+    let currentProductsCatalog = getShopInitialCatalog();
+
+    function escapeShopHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
     function applyFilters() {
       let results = [...currentProductsCatalog];
 
       // Wishlist view check
       if (viewParam === 'wishlist') {
-        const wishlist = getWishlist();
+        const wishlist = (typeof getWishlist === 'function') ? getWishlist() : [];
         results = results.filter(p => wishlist.includes(p.id));
         document.getElementById('productCountStatus').textContent = `Showing Saved Wishlist (${results.length} items)`;
       } else {
-        // Search query
+        // Search query (Smart Search with Hinglish/Hindi synonyms e.g. "bad" -> "bed")
         if (searchParam) {
-          const q = searchParam.toLowerCase();
-          results = results.filter(p =>
-            p.title.toLowerCase().includes(q) ||
-            p.description.toLowerCase().includes(q) ||
-            p.categoryName.toLowerCase().includes(q)
-          );
+          if (typeof productMatchesQuery === 'function') {
+            results = results.filter(p => productMatchesQuery(p, searchParam));
+          } else {
+            const q = searchParam.toLowerCase();
+            results = results.filter(p => {
+              const title = String(p.title || '').toLowerCase();
+              const desc = String(p.description || '').toLowerCase();
+              const cat = String(p.category || '').toLowerCase();
+              const catName = String(p.categoryName || '').toLowerCase();
+              const wood = String(p.woodType || '').toLowerCase();
+              return title.includes(q) || desc.includes(q) || cat.includes(q) || catName.includes(q) || wood.includes(q);
+            });
+          }
         }
 
         // Category
         if (currentCategory !== 'all') {
-          results = results.filter(p => p.category === currentCategory);
+          results = results.filter(p => String(p.category || '').toLowerCase() === currentCategory.toLowerCase());
         }
 
         // Price
-        results = results.filter(p => p.price <= maxPrice);
+        results = results.filter(p => {
+          if (typeof p.price === 'number') {
+            return p.price <= maxPrice;
+          }
+          return true;
+        });
 
         // Wood materials
         if (selectedWoods.length > 0) {
-          results = results.filter(p => selectedWoods.some(w => p.woodType.includes(w)));
+          results = results.filter(p => {
+            const wood = String(p.woodType || '').toLowerCase();
+            return selectedWoods.some(w => wood.includes(String(w).toLowerCase()));
+          });
         }
 
         // In Stock
         if (inStockOnly) {
-          results = results.filter(p => p.inStock);
+          results = results.filter(p => p.inStock !== false);
         }
       }
 
       // Sorting
       if (sortBy === 'price-asc') {
-        results.sort((a, b) => a.price - b.price);
+        results.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
       } else if (sortBy === 'price-desc') {
-        results.sort((a, b) => b.price - a.price);
+        results.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
       } else if (sortBy === 'rating') {
-        results.sort((a, b) => b.rating - a.rating);
+        results.sort((a, b) => (Number(b.rating) || 5) - (Number(a.rating) || 5));
       }
 
       // Render
@@ -412,13 +454,27 @@
       const emptyState = document.getElementById('emptyCatalogState');
       const countStatus = document.getElementById('productCountStatus');
 
-      if (viewParam !== 'wishlist') {
+      if (viewParam === 'wishlist') {
+        countStatus.textContent = `Showing Saved Wishlist (${results.length} items)`;
+      } else if (searchParam) {
+        countStatus.innerHTML = `Showing <strong>${results.length}</strong> products for "<strong>${escapeShopHtml(searchParam)}</strong>" <button type="button" onclick="clearShopSearch()" style="background: none; border: none; color: #c8102e; font-size: 0.82rem; font-weight: 700; cursor: pointer; text-decoration: underline; margin-left: 8px;">✕ Clear Search</button>`;
+      } else {
         countStatus.textContent = `Showing ${results.length} products`;
       }
 
       if (results.length === 0) {
         grid.style.display = 'none';
         emptyState.style.display = 'block';
+        if (searchParam) {
+          emptyState.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px;">
+              <div style="font-size: 2.5rem; margin-bottom: 10px;">🔍</div>
+              <h3 style="font-size: 1.3rem; margin-bottom: 8px; font-weight: 800;">No products found for "${escapeShopHtml(searchParam)}"</h3>
+              <p style="color: gray; font-size: 0.9rem; margin-bottom: 18px;">Try searching for <strong>Bed</strong>, <strong>Sofa</strong>, <strong>Mandir</strong>, <strong>Dining</strong>, or <strong>Chair</strong>.</p>
+              <button type="button" onclick="clearShopSearch()" class="btn btn-dark btn-sm">Clear Search & View All Products</button>
+            </div>
+          `;
+        }
       } else {
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
@@ -426,7 +482,39 @@
       }
     }
 
+    function clearShopSearch() {
+      searchParam = '';
+      const url = new URL(window.location);
+      url.searchParams.delete('search');
+      window.history.pushState({}, '', url);
+      const searchInput = document.getElementById('mainSearchInput');
+      if (searchInput) searchInput.value = '';
+      applyFilters();
+    }
+    window.clearShopSearch = clearShopSearch;
+
+    function handleShopPageSearch(val) {
+      searchParam = (val || '').trim();
+      const url = new URL(window.location);
+      if (searchParam) {
+        url.searchParams.set('search', searchParam);
+      } else {
+        url.searchParams.delete('search');
+      }
+      window.history.pushState({}, '', url);
+      const searchInput = document.getElementById('mainSearchInput');
+      if (searchInput) searchInput.value = searchParam;
+      applyFilters();
+    }
+    window.handleShopPageSearch = handleShopPageSearch;
+
     document.addEventListener('DOMContentLoaded', () => {
+      // Sync search input with URL search param
+      if (searchParam) {
+        const searchInput = document.getElementById('mainSearchInput');
+        if (searchInput) searchInput.value = searchParam;
+      }
+
       // Event Listeners
       document.querySelectorAll('input[name="filterCat"]').forEach(r => {
         r.addEventListener('change', (e) => {
@@ -470,7 +558,7 @@
         selectedWoods = [];
         document.getElementById('inStockOnly').checked = true;
         inStockOnly = true;
-        applyFilters();
+        clearShopSearch();
       });
 
       getAllProducts().then(prods => {
