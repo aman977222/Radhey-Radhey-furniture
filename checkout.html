@@ -205,7 +205,7 @@
 
               <div class="form-group">
                 <label>City *</label>
-                <input type="text" id="custCity" placeholder="City / Town" required>
+                <input type="text" id="custCity" placeholder="City (e.g. Jaipur)" required value="Jaipur">
               </div>
 
               <div class="form-group">
@@ -214,8 +214,8 @@
               </div>
 
               <div class="form-group">
-                <label>Pincode (only-jaipur) *</label>
-                <input type="text" id="custPin" placeholder="6-digit Pincode(only-302001-302043)" required pattern="3020(0[1-9]|[1-3][0-9]|4[0-3])" maxlength="6">
+                <label>Pincode (Jaipur Only) *</label>
+                <input type="text" id="custPin" placeholder="Jaipur Pincode (302001-302043)" required pattern="3020(0[1-9]|[1-3][0-9]|4[0-3])" title="Delivery is only available in Jaipur (Pincode: 302001 to 302043)" maxlength="6">
               </div>
 
               <div class="form-group full-width">
@@ -509,6 +509,16 @@
         const custState = (document.getElementById('custState')?.value || '').trim();
         const custPin = (document.getElementById('custPin')?.value || '').trim();
         const custNote = (document.getElementById('custNote')?.value || '').trim();
+
+        // Jaipur Only Delivery Validation (302001 - 302043)
+        const jaipurPinRegex = /^3020(0[1-9]|[1-3][0-9]|4[0-3])$/;
+        if (!jaipurPinRegex.test(custPin)) {
+          showToast('Delivery sirf Jaipur (Pincode: 302001 se 302043) me uplabdh hai!', 'error');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+          document.getElementById('custPin')?.focus();
+          return;
+        }
 
         let fullAddress = custAddress;
         if (custCity) fullAddress += ', ' + custCity;
