@@ -70,8 +70,8 @@
 
       <!-- Search Input with Auto Suggest -->
       <div class="header-search">
-        <form id="headerSearchForm" class="search-box">
-          <input type="text" id="mainSearchInput" placeholder="Search Sofa, Bed, Mandir, Handicrafts..."
+        <form id="headerSearchForm" class="search-box" action="shop.html" method="GET">
+          <input type="text" id="mainSearchInput" name="search" placeholder="Search Sofa, Bed, Mandir, Handicrafts..."
             autocomplete="off">
           <button type="submit" class="search-btn" title="Search" style="border: none; cursor: pointer;">
             <i class="bi bi-search" style="font-size: 1rem;"></i>
@@ -620,7 +620,7 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function initIndexFeatured() {
       // 1. Instant local render
       const initialFeatured = getFeaturedProducts();
       renderFeaturedUI(initialFeatured);
@@ -633,13 +633,20 @@
           }
         }).catch(() => { });
       }
+    }
 
-      // 3. Real-time listener for cloud sync
-      window.addEventListener('radha_products_synced', (e) => {
-        if (e.detail && Array.isArray(e.detail) && e.detail.length > 0) {
-          renderFeaturedUI(e.detail);
-        }
-      });
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initIndexFeatured);
+    } else {
+      initIndexFeatured();
+    }
+    window.addEventListener('load', initIndexFeatured);
+
+    // 3. Real-time listener for cloud sync
+    window.addEventListener('radha_products_synced', (e) => {
+      if (e.detail && Array.isArray(e.detail) && e.detail.length > 0) {
+        renderFeaturedUI(e.detail);
+      }
     });
   </script>
 

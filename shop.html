@@ -179,8 +179,8 @@
       </a>
 
       <div class="header-search">
-        <form id="headerSearchForm" class="search-box">
-          <input type="text" id="mainSearchInput" placeholder="Search Sofa, Bed, Mandir, Handicrafts...">
+        <form id="headerSearchForm" class="search-box" action="shop.html" method="GET">
+          <input type="text" id="mainSearchInput" name="search" placeholder="Search Sofa, Bed, Mandir, Handicrafts...">
           <button type="submit" class="search-btn">
             <i class="bi bi-search"></i>
           </button>
@@ -508,7 +508,7 @@
     }
     window.handleShopPageSearch = handleShopPageSearch;
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function initShopApp() {
       // Sync search input with URL search param
       if (searchParam) {
         const searchInput = document.getElementById('mainSearchInput');
@@ -576,7 +576,14 @@
       });
 
       applyFilters();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initShopApp);
+    } else {
+      initShopApp();
+    }
+    window.addEventListener('load', initShopApp);
   </script>
 </body>
 

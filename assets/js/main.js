@@ -1011,15 +1011,23 @@ function setupSearch() {
   const isInAlumFolder = currentPath.includes('/aluminium products/') || currentPath.includes('/aluminium%20products/') || currentPath.includes('/aluminium-products/');
   const rootPrefix = (isInUserFolder || isInAdminFolder || isInAlumFolder) ? '../' : '';
 
-  // Ensure products are primed in the background if catalog is empty
-  const initialCatalog = getSearchableCatalog();
-  if (initialCatalog.length === 0 && typeof getAllProducts === 'function') {
-    getAllProducts().catch(() => {});
+  // Function to execute search navigation
+  function executeSearch(val) {
+    const q = (val || '').trim();
+    if (!q) return;
+    dropdown.classList.remove('active');
+
+    const onShopPage = window.location.pathname.toLowerCase().endsWith('shop.html');
+    if (onShopPage && typeof window.handleShopPageSearch === 'function') {
+      window.handleShopPageSearch(q);
+    } else {
+      window.location.href = `${rootPrefix}shop.html?search=${encodeURIComponent(q)}`;
+    }
   }
 
-  searchInput.addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    if (val.length < 2) {
+  function renderSuggestions(val) {
+    val = (val || '').trim();
+    if (val.length < 1) {
       dropdown.classList.remove('active');
       dropdown.innerHTML = '';
       return;
@@ -1048,7 +1056,7 @@ function setupSearch() {
       const priceText = isFabProduct ? (p.rateUnit ? `Rate: ${p.rateUnit}` : 'On Quotation') : formatPrice(p.price);
 
       return `
-        <a href="${rootPrefix}product-details.html?id=${p.id}" class="search-result-item" style="display: flex; gap: 12px; padding: 10px 14px; text-decoration: none; color: inherit; align-items: center; border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
+        <a href="${rootPrefix}product-details.html?id=${encodeURIComponent(p.id)}" class="search-result-item" style="display: flex; gap: 12px; padding: 10px 14px; text-decoration: none; color: #0f172a; align-items: center; border-bottom: 1px solid #f1f5f9; background: white;">
           <img src="${resolveStoreImg(p.image, p.category)}" alt="${safeTitle}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; flex-shrink: 0;" onerror="this.onerror=null;this.src='${rootPrefix}assets/images/image.png';">
           <div style="flex: 1; min-width: 0;">
             <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${safeTitle}</div>
@@ -1071,29 +1079,51 @@ function setupSearch() {
 
     dropdown.innerHTML = itemsHtml + viewAllHtml;
     dropdown.classList.add('active');
-  });
+  }
 
-  document.addEventListener('click', (e) => {
-    if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.classList.remove('active');
-    }
-  });
+  if (!searchInput.dataset.searchBound) {
+    searchInput.dataset.searchBound = 'true';
 
-  const searchForm = document.getElementById('headerSearchForm');
-  if (searchForm) {
-    searchForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const val = searchInput.value.trim();
-      if (!val) return;
-      dropdown.classList.remove('active');
+    searchInput.addEventListener('input', (e) => {
+      renderSuggestions(e.target.value);
+    });
 
-      const onShopPage = window.location.pathname.toLowerCase().endsWith('shop.html');
-      if (onShopPage && typeof window.handleShopPageSearch === 'function') {
-        window.handleShopPageSearch(val);
-      } else {
-        window.location.href = `${rootPrefix}shop.html?search=${encodeURIComponent(val)}`;
+    searchInput.addEventListener('focus', (e) => {
+      if (e.target.value.trim().length >= 1) {
+        renderSuggestions(e.target.value);
       }
     });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        executeSearch(e.target.value);
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('active');
+      }
+    });
+  }
+
+  const searchForm = document.getElementById('headerSearchForm');
+  if (searchForm && !searchForm.dataset.formBound) {
+    searchForm.dataset.formBound = 'true';
+
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      executeSearch(searchInput.value);
+    });
+
+    const submitBtn = searchForm.querySelector('.search-btn');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        executeSearch(searchInput.value);
+      });
+    }
   }
 }
 
