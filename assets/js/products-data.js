@@ -3,6 +3,8 @@
 // ---------------------------------------------------------------
 const DB_STORAGE_KEY = 'radha_furniture_custom_products_v1';
 
+const DEFAULT_CATALOG_PRODUCTS = [];
+
 const PRODUCTS_DATA = (typeof window !== 'undefined' && Array.isArray(window.PRODUCTS_DATA) && window.PRODUCTS_DATA.length > 0)
   ? window.PRODUCTS_DATA 
   : DEFAULT_CATALOG_PRODUCTS;
